@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
-id_acceso = 1234
-id = 0
+id_acceso = 1001943
 
 # Hacemos uso de la funcion lower() para que el usuario pueda escribir en mayusculas o minusculas
 sensor = input("Hay gas en el laboratorio?: ").lower()=="si"

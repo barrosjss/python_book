@@ -1,0 +1,1142 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>HTTP, APIs y Streamlit</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/python.min.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;500;600;700;800;900&display=swap');
+:root{
+  --bg:#0f1117;--surface:#1a1d2e;--surface2:#252840;--border:#2e3260;
+  --accent:#7c6af7;--accent2:#5eead4;--accent3:#f97316;
+  --text:#e2e8f0;--muted:#94a3b8;
+  --green:#22c55e;--red:#ef4444;--yellow:#eab308;--blue:#3b82f6;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--text);height:100vh;overflow:hidden}
+/* PROGRESS BAR */
+#progress-bar{position:fixed;top:0;left:0;right:0;height:4px;background:var(--border);z-index:200}
+#progress-fill{height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2));transition:width .3s ease}
+/* SLIDE COUNTER */
+#counter{position:fixed;top:14px;right:20px;font-size:0.78rem;color:var(--muted);z-index:200;font-family:'Inter',sans-serif;background:rgba(15,17,23,.8);padding:4px 10px;border-radius:20px;border:1px solid var(--border)}
+/* SLIDES */
+#deck{position:relative;width:100vw;height:100vh;overflow:hidden}
+.slide{
+  position:absolute;inset:0;
+  display:none;flex-direction:column;justify-content:center;align-items:center;
+  padding:56px 80px 90px;
+  overflow-y:auto;
+  animation:fadeIn .35s ease;
+}
+.slide.active{display:flex}
+.slide.top-align{justify-content:flex-start;padding-top:72px}
+@keyframes fadeIn{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+/* NAVIGATION */
+#nav{position:fixed;bottom:0;left:0;right:0;height:60px;display:flex;align-items:center;justify-content:center;gap:1.5rem;background:rgba(15,17,23,.9);backdrop-filter:blur(10px);border-top:1px solid var(--border);z-index:200}
+#nav button{background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:8px 20px;border-radius:8px;cursor:pointer;font-size:0.9rem;transition:all .2s}
+#nav button:hover{background:var(--accent);border-color:var(--accent)}
+#nav button:disabled{opacity:.3;cursor:default}
+.slide-label{font-size:0.7rem;text-transform:uppercase;letter-spacing:2px;color:var(--muted);margin-bottom:.5rem}
+/* PORTADA */
+.hero-badge{display:inline-block;background:var(--accent);color:#fff;font-size:.75rem;font-weight:700;padding:5px 14px;border-radius:20px;letter-spacing:1px;text-transform:uppercase;margin-bottom:1.5rem}
+.hero-title{font-size:3.2rem;font-weight:900;line-height:1.1;text-align:center;background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:1rem}
+.hero-sub{font-size:1.15rem;color:var(--muted);text-align:center;max-width:580px;margin-bottom:2rem}
+.hero-meta{display:flex;gap:2rem;font-size:.875rem;color:var(--muted);flex-wrap:wrap;justify-content:center}
+.hero-meta span{display:flex;align-items:center;gap:6px}
+/* SECTION TITLE */
+.sec-title{font-size:2.4rem;font-weight:900;margin-bottom:.75rem;text-align:center}
+.sec-sub{font-size:1.05rem;color:var(--muted);text-align:center;max-width:620px}
+.accent{color:var(--accent)}
+.accent2{color:var(--accent2)}
+.accent3{color:var(--accent3)}
+/* AGENDA */
+.agenda-list{list-style:none;display:flex;flex-direction:column;gap:.75rem;max-width:700px;width:100%}
+.agenda-item{display:flex;align-items:center;gap:1rem;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:.85rem 1.25rem;font-size:1rem}
+.agenda-num{background:var(--accent);color:#fff;width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.8rem;flex-shrink:0}
+/* CARDS */
+.card-row{display:flex;gap:1rem;flex-wrap:wrap;justify-content:center;width:100%}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:1.25rem;flex:1;min-width:180px;max-width:280px}
+.card h4{font-size:.95rem;margin-bottom:.5rem}
+.card p{font-size:.85rem;color:var(--muted);margin:0}
+/* TWO COL */
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;width:100%;max-width:860px}
+/* COMPARE CARD */
+.compare-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:1.25rem}
+.compare-card.highlight{border-color:var(--accent2)}
+.compare-card h4{font-size:1rem;margin-bottom:.75rem}
+.compare-card ul{font-size:.875rem;padding-left:1.25rem}
+.compare-card li{margin-bottom:.35rem;color:var(--muted)}
+.compare-card li strong{color:var(--text)}
+/* CALLOUT */
+.callout{border-radius:10px;padding:.9rem 1.1rem;display:flex;gap:.75rem;border-left:4px solid;width:100%;max-width:820px}
+.callout.info{background:#1e3a5f22;border-color:var(--blue)}
+.callout.info .ctitle{color:#60a5fa}
+.callout.tip{background:#14532d22;border-color:var(--green)}
+.callout.tip .ctitle{color:#4ade80}
+.callout.warn{background:#78350f22;border-color:var(--yellow)}
+.callout.warn .ctitle{color:#facc15}
+.callout-icon{font-size:1.2rem;flex-shrink:0;margin-top:2px}
+.ctitle{font-size:.82rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-bottom:.2rem}
+.callout p{font-size:.875rem;margin:0;color:var(--muted)}
+/* CODE */
+pre{border-radius:10px;border:1px solid var(--border);width:100%;max-width:820px;overflow-x:auto;position:relative}
+pre code.hljs{border-radius:10px;font-size:.825rem}
+.code-file{position:absolute;top:8px;right:12px;font-size:.68rem;color:var(--muted);font-family:monospace;text-transform:uppercase}
+code:not(.hljs){background:var(--surface2);color:var(--accent2);padding:2px 6px;border-radius:4px;font-size:.875em;font-family:'Fira Code',monospace}
+/* METHOD BADGES */
+.badge{display:inline-block;padding:3px 10px;border-radius:6px;font-weight:700;font-size:.82rem;font-family:monospace}
+.get{background:#16a34a22;color:#4ade80;border:1px solid #16a34a}
+.post{background:#2563eb22;color:#60a5fa;border:1px solid #2563eb}
+.put{background:#d9770622;color:#fb923c;border:1px solid #d97706}
+.del{background:#dc262622;color:#f87171;border:1px solid #dc2626}
+.patch{background:#7c3aed22;color:#c4b5fd;border:1px solid #7c3aed}
+/* METHOD CARDS */
+.method-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:.75rem;width:100%;max-width:820px}
+.method-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:1rem;text-align:center}
+.method-card .badge{display:block;margin-bottom:.5rem}
+.method-card p{font-size:.78rem;color:var(--muted);margin:0}
+/* STATUS CODES */
+.status-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:.75rem;width:100%;max-width:760px}
+.sc{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:.85rem 1rem}
+.sc-num{font-size:1.5rem;font-weight:800;font-family:monospace}
+.sc-200{color:var(--green)}.sc-201{color:#34d399}.sc-400{color:var(--yellow)}.sc-401{color:#fb923c}.sc-404{color:var(--accent3)}.sc-500{color:var(--red)}
+.sc-label{font-size:.78rem;color:var(--muted);margin-top:2px}
+/* URL BOX */
+.url-box{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:1.25rem 1.5rem;font-family:monospace;font-size:.95rem;width:100%;max-width:820px}
+.up{display:inline-block;padding:2px 5px;border-radius:4px}
+.u-s{background:#16a34a33;color:#4ade80}.u-d{background:#2563eb33;color:#60a5fa}.u-p{background:#7c3aed33;color:#c4b5fd}.u-r{background:#d9770633;color:#fb923c}.u-q{background:#be185d33;color:#f472b6}
+.url-legend{display:flex;flex-wrap:wrap;gap:.75rem;margin-top:.85rem;font-size:.78rem}
+.url-legend span{display:flex;align-items:center;gap:4px}
+.dot{width:10px;height:10px;border-radius:50%;display:inline-block}
+/* TABLE */
+table{width:100%;border-collapse:collapse;font-size:.875rem;max-width:820px}
+th{background:var(--surface2);padding:.65rem 1rem;text-align:left;font-weight:600;border-bottom:2px solid var(--border)}
+td{padding:.55rem 1rem;border-bottom:1px solid var(--border)}
+tr:hover td{background:var(--surface)}
+/* TERMINAL */
+.term{background:#000;border-radius:10px;padding:.85rem 1.1rem;font-family:'Fira Code',monospace;font-size:.85rem;width:100%;max-width:820px;border:1px solid #333}
+.term .p{color:#4ade80}.term .c{color:#64748b}.term .o{color:#94a3b8}
+/* STEPS */
+.steps{display:flex;flex-direction:column;gap:.75rem;width:100%;max-width:820px}
+.step{display:flex;gap:1rem;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:.9rem 1.1rem}
+.sn{background:var(--accent);color:#fff;width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.78rem;flex-shrink:0;margin-top:2px}
+.step-body h4{font-size:.9rem;margin-bottom:.25rem}
+.step-body p{font-size:.82rem;color:var(--muted);margin:0}
+/* ACTIVITY */
+.activity-header{display:flex;align-items:center;gap:.75rem;margin-bottom:1.25rem}
+.activity-header h2{color:var(--accent);font-size:1.6rem}
+.act-badge{background:var(--accent);color:#fff;padding:3px 10px;border-radius:20px;font-size:.72rem;font-weight:700}
+.checklist{list-style:none;display:flex;flex-direction:column;gap:.4rem}
+.checklist li{padding:.35rem 0 .35rem 1.75rem;position:relative;font-size:.875rem}
+.checklist li::before{content:'☐';position:absolute;left:0;color:var(--accent)}
+/* ─── MEMES ─── */
+.meme-slide{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;width:100%;gap:0}
+/* Impact / one-does-not */
+.impact-meme{display:flex;flex-direction:column;align-items:center;gap:.25rem;max-width:700px}
+.impact-top,.impact-bottom{font-family:'Anton','Arial Black',sans-serif;font-size:2.8rem;color:#fff;text-transform:uppercase;text-shadow:3px 3px 0 #000,-1px -1px 0 #000,1px -1px 0 #000,-1px 1px 0 #000;text-align:center;line-height:1.1}
+.impact-img{font-size:7rem;line-height:1;margin:.35rem 0;filter:drop-shadow(0 4px 16px rgba(0,0,0,.6))}
+.meme-bg{background:linear-gradient(135deg,#1a0a2e,#0a0a0a);border-radius:16px;padding:2rem 2.5rem}
+/* Drake */
+.drake-meme{display:flex;flex-direction:column;border-radius:12px;overflow:hidden;max-width:680px;border:1px solid var(--border)}
+.drake-row{display:flex;align-items:center;gap:1.25rem;padding:1.1rem 1.5rem;background:var(--surface)}
+.drake-row:first-child{border-bottom:1px solid var(--border)}
+.drake-row.yes{background:var(--surface2)}
+.drake-emoji{font-size:2.5rem;flex-shrink:0}
+.drake-caption{font-size:1.05rem;font-weight:600;line-height:1.3}
+.drake-row.yes .drake-caption{color:var(--accent2)}
+.drake-row:first-child .drake-caption{color:var(--muted);text-decoration:line-through}
+/* This is fine */
+.tif{display:flex;flex-direction:column;align-items:center;gap:.5rem;max-width:560px;text-align:center}
+.tif-scene{font-size:5rem}
+.tif-bubble{background:var(--surface);border:2px solid var(--border);border-radius:12px;padding:1rem 1.5rem;font-size:1.3rem;font-weight:700;position:relative;margin-top:.5rem}
+.tif-bubble::before{content:'▲';position:absolute;top:-14px;left:50%;transform:translateX(-50%);color:var(--border);font-size:.8rem}
+.tif-label{font-size:.9rem;color:var(--muted)}
+/* Pikachu */
+.pika{display:flex;flex-direction:column;align-items:center;gap:.75rem;max-width:580px;text-align:center}
+.pika-setup{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:.75rem 1.5rem;font-size:1.05rem;color:var(--muted)}
+.pika-arrow{font-size:2rem}
+.pika-face{font-size:6rem}
+.pika-caption{font-family:'Anton',sans-serif;font-size:1.8rem;color:var(--red);text-transform:uppercase}
+/* Expanding brain */
+.brain-meme{display:flex;flex-direction:column;gap:.35rem;max-width:640px;width:100%}
+.brain-row{display:flex;align-items:center;gap:1rem;padding:.85rem 1.1rem;border-radius:10px;background:var(--surface);border:1px solid var(--border)}
+.brain-row:nth-child(2){border-color:var(--blue)}
+.brain-row:nth-child(3){border-color:var(--accent);background:var(--surface2)}
+.brain-row:nth-child(4){border-color:var(--accent2);background:#0d1f1e}
+.brain-icon{font-size:1.8rem;flex-shrink:0}
+.brain-text{font-size:.95rem;font-weight:600}
+.brain-label{font-size:.75rem;color:var(--muted)}
+/* Spiderman */
+.spider{display:flex;flex-direction:column;align-items:center;gap:1rem;max-width:600px;text-align:center}
+.spider-row{display:flex;align-items:center;justify-content:center;gap:1.5rem}
+.spider-item{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:1rem 1.5rem;font-size:1.05rem;font-weight:700}
+.spider-item.highlight{border-color:var(--accent);color:var(--accent2)}
+.spider-point{font-size:2rem}
+.spider-caption{font-size:.9rem;color:var(--muted)}
+/* Meme tag */
+.meme-tag{position:fixed;top:14px;left:20px;background:#ff4b4b;color:#fff;font-size:.7rem;font-weight:700;padding:3px 10px;border-radius:20px;letter-spacing:.5px;text-transform:uppercase;z-index:200;display:none}
+/* Rick & Morty theme */
+.rm-accent{color:#97ce4c}
+.rm-badge{display:inline-block;background:#97ce4c;color:#000;font-weight:700;font-size:.75rem;padding:4px 12px;border-radius:20px;letter-spacing:1px;text-transform:uppercase;margin-bottom:1rem}
+h2{font-size:1.8rem;font-weight:800;margin-bottom:.5rem}
+h3{font-size:1.25rem;font-weight:700;margin:.75rem 0 .5rem;color:var(--accent2)}
+h4{font-size:1rem;font-weight:600;margin:.6rem 0 .35rem}
+p{margin-bottom:.6rem}
+ul,ol{padding-left:1.4rem;margin-bottom:.6rem}
+li{margin-bottom:.3rem;font-size:.9rem}
+</style>
+</head>
+<body>
+
+<div id="progress-bar"><div id="progress-fill"></div></div>
+<div id="counter">1 / 30</div>
+<div class="meme-tag" id="meme-tag">🤣 Meme</div>
+
+<div id="deck">
+
+<!-- ═══════════════ SLIDE 1: PORTADA ═══════════════ -->
+<div class="slide" data-meme="false">
+  <div class="hero-badge">Módulo 6</div>
+  <h1 class="hero-title">HTTP, APIs y Streamlit</h1>
+  <p class="hero-sub">Descubre cómo funciona internet por dentro, consume datos de APIs y construye apps web con Python puro.</p>
+  <div class="hero-meta">
+    <span>⏱ ~60 min</span>
+    <span>📦 <code>requests</code> · <code>streamlit</code></span>
+    <span>🛸 Rick and Morty API</span>
+  </div>
+</div>
+
+<!-- ═══════════════ SLIDE 2: AGENDA ═══════════════ -->
+<div class="slide top-align" data-meme="false">
+  <div class="slide-label">Hoja de ruta</div>
+  <h2>¿Qué vemos hoy?</h2>
+  <ul class="agenda-list" style="margin-top:1rem">
+    <li class="agenda-item"><div class="agenda-num">1</div>HTTP y HTTPS — cómo habla tu computadora con el mundo</li>
+    <li class="agenda-item"><div class="agenda-num">2</div>Anatomía de una URL — qué significa cada parte</li>
+    <li class="agenda-item"><div class="agenda-num">3</div>Métodos HTTP — GET, POST, PUT, DELETE</li>
+    <li class="agenda-item"><div class="agenda-num">4</div>JSON — el idioma de las APIs</li>
+    <li class="agenda-item"><div class="agenda-num">5</div>Librería <code>requests</code> — Python habla con APIs</li>
+    <li class="agenda-item"><div class="agenda-num">6</div>¿Qué es una API REST?</li>
+    <li class="agenda-item"><div class="agenda-num">7</div>Streamlit — apps web con Python puro</li>
+    <li class="agenda-item"><div class="agenda-num">🛸</div>Actividad: Explorador de Rick and Morty</li>
+  </ul>
+</div>
+
+<!-- ═══════════════ SLIDE 3: MEME ═══════════════ -->
+<div class="slide" data-meme="true">
+  <div class="meme-slide">
+    <div class="brain-meme">
+      <p style="text-align:center;font-size:.9rem;color:var(--muted);margin-bottom:.5rem">La evolución del programador 🧠</p>
+      <div class="brain-row">
+        <div class="brain-icon">🧠</div>
+        <div><div class="brain-text">Abrir YouTube en el navegador</div><div class="brain-label">Cerebro pequeño</div></div>
+      </div>
+      <div class="brain-row">
+        <div class="brain-icon">🧠✨</div>
+        <div><div class="brain-text">Saber que YouTube hace peticiones HTTP</div><div class="brain-label">Cerebro medio</div></div>
+      </div>
+      <div class="brain-row">
+        <div class="brain-icon">🧠⚡</div>
+        <div><div class="brain-text">Consumir una API con Python</div><div class="brain-label">Cerebro grande</div></div>
+      </div>
+      <div class="brain-row">
+        <div class="brain-icon">🛸🧪</div>
+        <div><div class="brain-text">Hacer tu propia API + app de Rick and Morty</div><div class="brain-label">Cerebro interdimensional</div></div>
+      </div>
+    </div>
+    <p style="color:var(--muted);font-size:.85rem;margin-top:1.25rem">Al final de esta clase, tú vas a ser ese último cerebro 👆</p>
+  </div>
+</div>
+
+<!-- ═══════════════ SLIDE 4: HTTP vs HTTPS ═══════════════ -->
+<div class="slide" data-meme="false">
+  <div class="slide-label">Sección 1</div>
+  <h2>HTTP <span style="color:var(--muted)">vs</span> <span class="accent2">HTTPS</span></h2>
+  <p style="text-align:center;color:var(--muted);margin-bottom:1.5rem;max-width:600px">Cuando abres una página web, tu compu le pide datos a otro servidor. Para que se entiendan, usan un protocolo común.</p>
+  <div class="two-col" style="max-width:700px">
+    <div class="compare-card">
+      <h4 style="color:var(--red)">🔓 HTTP</h4>
+      <ul>
+        <li><strong>HyperText Transfer Protocol</strong></li>
+        <li>Datos viajan en <strong>texto plano</strong></li>
+        <li>En WiFi pública: cualquiera puede interceptar y leer tu petición con herramientas como Wireshark</li>
+        <li>Puerto por defecto: <code>80</code></li>
+      </ul>
+    </div>
+    <div class="compare-card highlight">
+      <h4 style="color:var(--green)">🔒 HTTPS</h4>
+      <ul>
+        <li><strong>HTTP + SSL/TLS (encriptado)</strong></li>
+        <li>Negocia una clave secreta entre cliente y servidor → todo cifrado</li>
+        <li>El 🔒 del navegador = certificado SSL que verifica identidad del servidor</li>
+        <li>Puerto por defecto: <code>443</code></li>
+      </ul>
+    </div>
+  </div>
+  <div class="callout info" style="margin-top:1rem">
+    <div class="callout-icon">💡</div>
+    <div><div class="ctitle">Para el programador</div><p>Python con <code>requests</code> maneja HTTPS automáticamente — verifica el certificado y cifra todo. Tú solo escribes la URL con <code>https://</code>. Si alguna vez necesitas deshabilitar la verificación (solo en pruebas): <code>requests.get(url, verify=False)</code>.</p></div>
+  </div>
+</div>
+
+<!-- ═══════════════ SLIDE 5: REQUEST / RESPONSE ═══════════════ -->
+<div class="slide" data-meme="false">
+  <div class="slide-label">Sección 1</div>
+  <h2>Ciclo <span class="accent">Request</span> / <span class="accent2">Response</span></h2>
+  <p style="text-align:center;color:var(--muted);margin-bottom:1.5rem">Todo se reduce a un vaivén de dos mensajes</p>
+  <div class="steps" style="max-width:680px">
+    <div class="step">
+      <div class="sn">1</div>
+      <div class="step-body">
+        <h4>📤 Request — Tu compu → Servidor</h4>
+        <p>Contiene: <strong>método</strong> (GET/POST/…), <strong>URL</strong> (qué recurso pides), <strong>headers</strong> (metadatos como Content-Type, Authorization) y <strong>body</strong> (solo en POST/PUT — los datos que envías).</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="sn">2</div>
+      <div class="step-body">
+        <h4>📥 Response — Servidor → Tu compu</h4>
+        <p>Contiene: <strong>código de estado</strong> (200, 404, 500…), <strong>headers</strong> de respuesta (tipo de contenido, cookies) y <strong>body</strong> (los datos JSON que pediste).</p>
+      </div>
+    </div>
+  </div>
+  <div style="text-align:center;font-size:2.5rem;margin-top:1.25rem">
+    🖥️ &nbsp;→→→ <span style="font-size:1rem;color:var(--muted)">request</span> →→→ &nbsp;🌐<br/>
+    <span style="font-size:.8rem;color:var(--muted)">Tu compu &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Servidor</span><br/>
+    🖥️ &nbsp;←←← <span style="font-size:1rem;color:var(--accent2)">response</span> ←←← &nbsp;🌐
+  </div>
+</div>
+
+<!-- ═══════════════ SLIDE 6: CÓDIGOS DE RESPUESTA ═══════════════ -->
+<div class="slide" data-meme="false">
+  <div class="slide-label">Sección 1</div>
+  <h2>Códigos de Respuesta HTTP</h2>
+  <p style="text-align:center;color:var(--muted);margin-bottom:1.5rem">El servidor siempre incluye un número que dice si todo salió bien o qué falló</p>
+  <div class="status-grid" style="max-width:680px">
+    <div class="sc"><div class="sc-num sc-200">200</div><div class="sc-label">OK — Todo perfecto ✅</div></div>
+    <div class="sc"><div class="sc-num sc-201">201</div><div class="sc-label">Created — Se creó algo 🆕</div></div>
+    <div class="sc"><div class="sc-num sc-400">400</div><div class="sc-label">Bad Request — Error tuyo ⚠️</div></div>
+    <div class="sc"><div class="sc-num sc-401">401</div><div class="sc-label">Unauthorized — Sin permiso 🔐</div></div>
+    <div class="sc"><div class="sc-num sc-404">404</div><div class="sc-label">Not Found — No existe 🔍</div></div>
+    <div class="sc"><div class="sc-num sc-500">500</div><div class="sc-label">Server Error — Error del servidor 💥</div></div>
+  </div>
+  <div class="callout tip" style="margin-top:1rem;max-width:680px">
+    <div class="callout-icon">🧠</div>
+    <div><div class="ctitle">Regla fácil</div><p><strong>2xx</strong> = éxito &nbsp;|&nbsp; <strong>4xx</strong> = tu error &nbsp;|&nbsp; <strong>5xx</strong> = error del servidor</p></div>
+  </div>
+</div>
+
+<!-- ═══════════════ SLIDE 7: MEME 404 ═══════════════ -->
+<div class="slide" data-meme="true">
+  <div class="meme-slide">
+    <div class="tif">
+      <p style="font-size:.9rem;color:var(--muted)">El desarrollador junior cuando su API responde 500 en producción:</p>
+      <div class="tif-scene">🔥🐶☕🔥</div>
+      <div class="tif-bubble">"Todo está bien. Esto está bien."</div>
+      <div class="tif-label" style="margin-top:.75rem">— Response status: 500 Internal Server Error —</div>
+    </div>
+    <div class="drake-meme" style="margin-top:1.5rem;max-width:600px">
+      <div class="drake-row">
+        <div class="drake-emoji">🙅‍♂️</div>
+        <div class="drake-caption">Revisar el status code antes de usar los datos</div>
+      </div>
+      <div class="drake-row yes">
+        <div class="drake-emoji">👉</div>
+        <div class="drake-caption">response.raise_for_status() al rescate</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ SLIDE 8: URL ═══════════════ -->
+<div class="slide" data-meme="false">
+  <div class="slide-label">Sección 2</div>
+  <h2>Anatomía de una <span class="accent">URL</span></h2>
+  <p style="text-align:center;color:var(--muted);margin-bottom:1.25rem">Una URL es la dirección exacta de un recurso en internet. Cada parte tiene su función.</p>
+  <div class="url-box">
+    <span class="up u-s">https://</span><span class="up u-d">rickandmortyapi.com</span><span class="up u-p">:443</span><span class="up u-r">/api/character/1</span><span class="up u-q">?name=rick&status=alive</span>
+    <div class="url-legend">
+      <span><span class="dot" style="background:#4ade80"></span> Esquema (protocolo)</span>
+      <span><span class="dot" style="background:#60a5fa"></span> Dominio (servidor)</span>
+      <span><span class="dot" style="background:#c4b5fd"></span> Puerto</span>
+      <span><span class="dot" style="background:#fb923c"></span> Path (ruta del recurso)</span>
+      <span><span class="dot" style="background:#f472b6"></span> Query parameters (filtros)</span>
+    </div>
+  </div>
+  <table style="max-width:820px;margin-top:.75rem">
+    <thead><tr><th>Parte</th><th>Ejemplo</th><th>Para qué sirve</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Esquema</strong></td><td><code>https://</code></td><td>Protocolo de comunicación</td></tr>
+      <tr><td><strong>Dominio</strong></td><td><code>rickandmortyapi.com</code></td><td>Dirección del servidor</td></tr>
+      <tr><td><strong>Path</strong></td><td><code>/api/character/1</code></td><td>Recurso específico que pides</td></tr>
+      <tr><td><strong>Query params</strong></td><td><code>?name=rick&status=alive</code></td><td>Filtros adicionales (siempre empieza con <code>?</code>)</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- ═══════════════ SLIDE 9: QUERY PARAMS ═══════════════ -->
+<div class="slide" data-meme="false">
+  <div class="slide-label">Sección 2</div>
+  <h2>Query Parameters — <span class="accent2">Los filtros</span></h2>
+  <p style="text-align:center;color:var(--muted);margin-bottom:1.25rem">Van después del <code>?</code> en la URL. Separa múltiples params con <code>&amp;</code></p>
+  <div class="card-row">
+    <div class="card" style="max-width:800px;width:100%">
+      <div class="url-box" style="margin-bottom:1rem">
+        <span class="up u-r">/api/character</span><span class="up u-q">?name=rick</span>
+        <p style="font-size:.8rem;color:var(--muted);margin:6px 0 0">→ Busca personajes con nombre "rick"</p>
+      </div>
+      <div class="url-box" style="margin-bottom:1rem">
+        <span class="up u-r">/api/character</span><span class="up u-q">?status=alive&species=human</span>
+        <p style="font-size:.8rem;color:var(--muted);margin:6px 0 0">→ Personajes vivos Y humanos (dos filtros con &amp;)</p>
+      </div>
+      <div class="url-box">
+        <span class="up u-r">/api/character</span><span class="up u-q">?page=2</span>
+        <p style="font-size:.8rem;color:var(--muted);margin:6px 0 0">→ Segunda página de resultados</p>
+      </div>
+    </div>
+  </div>
+  <div class="callout tip" style="margin-top:.75rem">
+    <div class="callout-icon">🎯</div>
+    <div><div class="ctitle">Regla</div><p>El <strong>path</strong> dice QUÉ recurso quieres. Los <strong>query params</strong> dicen CÓMO lo quieres filtrado o paginado.</p></div>
+  </div>
+</div>
+
+<!-- ═══════════════ SLIDE 10: MEME MÉTODOS ═══════════════ -->
+<div class="slide" data-meme="true">
+  <div class="meme-slide">
+    <div class="impact-meme meme-bg">
+      <div class="impact-top">One does not simply</div>
+      <div class="impact-img">🧙‍♂️</div>
+      <div class="impact-bottom">usar GET para crear datos en el servidor</div>
+    </div>
+    <p style="color:var(--muted);font-size:.9rem;margin-top:1.5rem">Para eso existe POST 👇 — cada acción tiene su método</p>
+  </div>
+</div>
+
+<!-- ═══════════════ SLIDE 11: MÉTODOS HTTP ═══════════════ -->
+<div class="slide" data-meme="false">
+  <div class="slide-label">Sección 3</div>
+  <h2>Métodos HTTP — <span class="accent">Los Verbos</span></h2>
+  <p style="text-align:center;color:var(--muted);margin-bottom:1.25rem">Le dicen al servidor QUÉ ACCIÓN quieres hacer con el recurso</p>
+  <div class="method-grid">
+    <div class="method-card">
+      <span class="badge get">GET</span>
+      <p><strong>Leer / Obtener</strong><br/>No modifica nada</p>
+    </div>
+    <div class="method-card">
+      <span class="badge post">POST</span>
+      <p><strong>Crear</strong><br/>Envía datos nuevos</p>
+    </div>
+    <div class="method-card">
+      <span class="badge put">PUT</span>
+      <p><strong>Actualizar todo</strong><br/>Reemplaza completo</p>
+    </div>
+    <div class="method-card">
+      <span class="badge patch">PATCH</span>
+      <p><strong>Actualizar parte</strong><br/>Modifica un campo</p>
+    </div>
+    <div class="method-card">
+      <span class="badge del">DELETE</span>
+      <p><strong>Eliminar</strong><br/>Borra el recurso</p>
+    </div>
+  </div>
+  <table style="max-width:820px;margin-top:1rem">
+    <thead><tr><th>CRUD</th><th>Método</th><th>Ejemplo con Rick &amp; Morty</th></tr></thead>
+    <tbody>
+      <tr><td><strong>C</strong>reate</td><td><span class="badge post">POST</span></td><td>Crear un nuevo personaje</td></tr>
+      <tr><td><strong>R</strong>ead</td><td><span class="badge get">GET</span></td><td>Ver la lista de personajes</td></tr>
+      <tr><td><strong>U</strong>pdate</td><td><span class="badge put">PUT</span></td><td>Cambiar el estado del personaje</td></tr>
+      <tr><td><strong>D</strong>elete</td><td><span class="badge del">DELETE</span></td><td>Eliminar un personaje</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- ═══════════════ SLIDE 12: MEME JSON ═══════════════ -->
+<div class="slide" data-meme="true">
+  <div class="meme-slide">
+    <p style="color:var(--muted);font-size:.9rem;margin-bottom:1rem">¿JSON y diccionarios de Python son iguales?</p>
+    <div class="spider">
+      <div class="spider-row">
+        <div class="spider-item">JSON<br/><span style="font-size:.75rem;color:var(--muted)">{"nombre": "Rick"}</span></div>
+        <div class="spider-point">👉👈</div>
+        <div class="spider-item highlight">Dict Python<br/><span style="font-size:.75rem;color:var(--muted)">{"nombre": "Rick"}</span></div>
+      </div>
+      <div class="spider-caption" style="margin-top:.75rem">Son prácticamente lo mismo. <code>requests</code> convierte JSON → dict automáticamente.</div>
+    </div>
+    <div class="callout tip" style="margin-top:1.5rem;max-width:600px">
+      <div class="callout-icon">🤝</div>
+      <div><div class="ctitle">Clave</div><p>Si ya sabes usar diccionarios en Python, ya sabes leer JSON. No hay diferencia real para ti.</p></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ SLIDE 13: JSON ═══════════════ -->
+<div class="slide" data-meme="false">
+  <div class="slide-label">Sección 4</div>
+  <h2>JSON — El idioma de las APIs</h2>
+  <div class="two-col" style="align-items:start">
+    <div>
+      <h3>Ejemplo de respuesta JSON</h3>
+      <div style="position:relative">
+        <div class="code-file">JSON</div>
+        <pre><code class="language-python">{
+  "id": 1,
+  "name": "Rick Sanchez",
+  "status": "Alive",
+  "species": "Human",
+  "gender": "Male",
+  "image": "https://...",
+  "episode": [
+    "https://...episode/1",
+    "https://...episode/2"
+  ]
+}</code></pre>
+      </div>
+    </div>
+    <div>
+      <h3>JSON ↔ Python</h3>
+      <table style="font-size:.82rem">
+        <thead><tr><th>JSON</th><th>Python</th></tr></thead>
+        <tbody>
+          <tr><td><code>{"clave": valor}</code></td><td><code>dict</code></td></tr>
+          <tr><td><code>[1, 2, 3]</code></td><td><code>list</code></td></tr>
+          <tr><td><code>"texto"</code></td><td><code>str</code></td></tr>
+          <tr><td><code>42</code></td><td><code>int</code></td></tr>
+          <tr><td><code>3.14</code></td><td><code>float</code></td></tr>
+          <tr><td><code>true/false</code></td><td><code>True/False</code></td></tr>
+          <tr><td><code>null</code></td><td><code>None</code></td></tr>
+        </tbody>
+      </table>
+      <div class="callout info" style="margin-top:.75rem">
+        <div class="callout-icon">💡</div>
+        <div><div class="ctitle">Fácil</div><p><code>respuesta.json()</code> convierte la respuesta de la API a un dict de Python automáticamente.</p></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ SLIDE 14: MEME API ═══════════════ -->
+<div class="slide" data-meme="true">
+  <div class="meme-slide">
+    <div class="impact-meme meme-bg">
+      <div class="impact-top">API = el mesero</div>
+      <div class="impact-img">🍽️</div>
+      <div class="impact-bottom">tú pides, él trae. no entras a la cocina.</div>
+    </div>
+    <div class="card-row" style="margin-top:1.5rem;max-width:700px">
+      <div class="card" style="flex:1">
+        <h4>Tú (cliente)</h4>
+        <p>"Dame los personajes de la dimensión C-137"</p>
+      </div>
+      <div class="card" style="flex:1;border-color:var(--accent2)">
+        <h4 style="color:var(--accent2)">API (mesero)</h4>
+        <p>Recibe, procesa, va a la base de datos, te trae el JSON</p>
+      </div>
+      <div class="card" style="flex:1">
+        <h4>Base de datos (cocina)</h4>
+        <p>Nunca accedes directo. La API controla qué puedes ver.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ SLIDE 15: API REST ═══════════════ -->
+<div class="slide" data-meme="false">
+  <div class="slide-label">Sección 5</div>
+  <h2>¿Qué es una <span class="accent">API REST</span>?</h2>
+  <p style="text-align:center;color:var(--muted);margin-bottom:1.25rem">REST es una manera de diseñar APIs con reglas simples y predecibles</p>
+  <div class="card-row" style="margin-bottom:1rem">
+    <div class="card"><h4>📦 Recursos</h4><p>Todo es un "recurso": personaje, episodio, ubicación</p></div>
+    <div class="card"><h4>🔗 URLs</h4><p>Cada recurso tiene su propia URL única</p></div>
+    <div class="card"><h4>🌐 JSON</h4><p>Las respuestas siempre son en JSON</p></div>
+    <div class="card"><h4>🔄 Sin estado</h4><p>Cada petición es independiente</p></div>
+  </div>
+  <table style="max-width:820px">
+    <thead><tr><th>Acción</th><th>Método</th><th>URL</th><th>Qué hace</th></tr></thead>
+    <tbody>
+      <tr><td>Listar</td><td><span class="badge get">GET</span></td><td><code>/character</code></td><td>Todos los personajes</td></tr>
+      <tr><td>Ver uno</td><td><span class="badge get">GET</span></td><td><code>/character/5</code></td><td>Personaje con ID 5</td></tr>
+      <tr><td>Filtrar</td><td><span class="badge get">GET</span></td><td><code>/character?name=rick</code></td><td>Buscar por nombre</td></tr>
+      <tr><td>Crear</td><td><span class="badge post">POST</span></td><td><code>/character</code></td><td>Crea nuevo personaje</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- ═══════════════ SLIDE 16: REQUESTS GET ═══════════════ -->
+<div class="slide" data-meme="false">
+  <div class="slide-label">Sección 5 — Librería requests</div>
+  <h2><code>requests</code> — <span class="accent2">GET básico</span></h2>
+  <div class="term" style="margin-bottom:.75rem"><span class="p">$</span> <span>pip install requests</span></div>
+  <div style="position:relative;width:100%;max-width:820px">
+    <div class="code-file">Python</div>
+    <pre><code class="language-python">import requests
+
+# 1. Hacer la petición GET
+r = requests.get("https://rickandmortyapi.com/api/character/1")
+
+# 2. Ver el código de estado
+print(r.status_code)   # 200  ← ¡todo bien!
+
+# 3. Obtener los datos como diccionario Python
+personaje = r.json()
+
+print(personaje["name"])    # "Rick Sanchez"
+print(personaje["status"])  # "Alive"
+print(personaje["species"]) # "Human"
+print(personaje["image"])   # URL de la imagen</code></pre>
+  </div>
+  <div class="two-col" style="max-width:820px;margin-top:.75rem">
+    <div class="callout tip">
+      <div class="callout-icon">🎯</div>
+      <div><div class="ctitle">Qué tiene el objeto respuesta</div><p><code>r.status_code</code> · <code>r.json()</code> · <code>r.text</code> · <code>r.headers</code> · <code>r.url</code> · <code>r.elapsed</code></p></div>
+    </div>
+    <div class="callout info">
+      <div class="callout-icon">🔄</div>
+      <div><div class="ctitle">¿Por qué .json() funciona?</div><p>El servidor manda texto (un string de JSON). <code>r.json()</code> llama internamente a <code>json.loads(r.text)</code> — lo parsea y devuelve un dict Python. Si el servidor respondió HTML en vez de JSON (ej: error 500 de Django), <code>.json()</code> lanza excepción. Ver <code>r.text</code> primero para diagnosticar.</p></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ SLIDE 17: REQUESTS GET PARAMS ═══════════════ -->
+<div class="slide" data-meme="false">
+  <div class="slide-label">Sección 5 — Librería requests</div>
+  <h2><code>requests</code> — <span class="accent2">GET con filtros</span></h2>
+  <div style="position:relative;width:100%;max-width:820px">
+    <div class="code-file">Python</div>
+    <pre><code class="language-python">import requests
+
+# En vez de escribir la URL a mano con ?name=rick&status=alive
+# pasamos los params como diccionario → requests arma la URL
+params = {
+    "name": "rick",
+    "status": "alive"
+}
+
+r = requests.get(
+    "https://rickandmortyapi.com/api/character",
+    params=params
+)
+# URL real que se construye: /api/character?name=rick&status=alive
+
+data = r.json()
+
+print(f"Total encontrados: {data['info']['count']}")
+print(f"Páginas: {data['info']['pages']}")
+
+personajes = data["results"]   # lista de personajes
+for p in personajes[:3]:
+    print(p["name"], "—", p["status"])</code></pre>
+  </div>
+</div>
+
+<!-- ═══════════════ SLIDE 18: REQUESTS POST + ERRORES ═══════════════ -->
+<div class="slide" data-meme="false">
+  <div class="slide-label">Sección 5 — Librería requests</div>
+  <h2><code>requests</code> — <span class="accent2">POST y manejo de errores</span></h2>
+  <div class="two-col" style="align-items:start">
+    <div>
+      <h3>POST — Enviar datos</h3>
+      <div style="position:relative">
+        <div class="code-file">Python</div>
+        <pre><code class="language-python">import requests
+
+nuevo = {
+    "title": "Mi post",
+    "body": "Aprendiendo APIs",
+    "userId": 1
+}
+
+r = requests.post(
+    "https://jsonplaceholder.typicode.com/posts",
+    json=nuevo   # ← json= convierte dict a JSON Y agrega
+                 #   Content-Type: application/json al header
+)
+
+print(r.status_code)  # 201 Created (no 200: se creó algo nuevo)
+print(r.json())       # servidor responde con el objeto + su ID</code></pre>
+      </div>
+      <div class="callout warn" style="margin-top:.5rem">
+        <div class="callout-icon">⚠️</div>
+        <div><div class="ct">json= vs data=</div><p><code>data=dict</code> envía como formulario HTML (<code>nombre=Rick&edad=70</code>). <code>json=dict</code> envía como JSON (<code>{"nombre":"Rick"}</code>). Las APIs REST esperan JSON — siempre usa <code>json=</code>.</p></div>
+      </div>
+    </div>
+    <div>
+      <h3>Manejo de errores</h3>
+      <div style="position:relative">
+        <div class="code-file">Python</div>
+        <pre><code class="language-python">import requests
+
+r = requests.get(
+    "https://rickandmortyapi.com/api/character/9999"
+)
+
+# Opción 1: verificar manual
+if r.status_code == 200:
+    datos = r.json()
+elif r.status_code == 404:
+    print("Personaje no existe")
+
+# Opción 2: automático (recomendado)
+try:
+    r.raise_for_status()  # lanza excepción si 4xx o 5xx
+    datos = r.json()
+except requests.exceptions.HTTPError as e:
+    print(f"Error: {e}")</code></pre>
+      </div>
+      <div class="callout tip" style="margin-top:.5rem">
+        <div class="callout-icon">💡</div>
+        <div><div class="ct">¿Por qué raise_for_status?</div><p><code>requests</code> no falla automáticamente en errores 4xx/5xx — solo falla si no puede conectarse. <code>raise_for_status()</code> convierte cualquier respuesta de error en una excepción Python para que tu código no procese silenciosamente una respuesta fallida.</p></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ SLIDE 19: MEME STREAMLIT ═══════════════ -->
+<div class="slide" data-meme="true">
+  <div class="meme-slide">
+    <div class="pika">
+      <div class="pika-setup">Estudiante a las 11pm: "Voy a hacer solo el backend, sin interfaz"</div>
+      <div class="pika-arrow">⬇️</div>
+      <div style="font-size:.9rem;color:var(--muted)">Descubre <code>streamlit</code></div>
+      <div class="pika-arrow">⬇️</div>
+      <div class="pika-face">😱</div>
+      <div class="pika-caption">Son las 3am y lleva 14 widgets</div>
+    </div>
+    <div class="callout info" style="margin-top:1.5rem;max-width:580px">
+      <div class="callout-icon">🪄</div>
+      <div><div class="ctitle">Spoiler</div><p>Con Streamlit construyes una app web completa con Python puro. Sin HTML. Sin CSS. Sin JavaScript.</p></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ SLIDE 20: STREAMLIT INTRO ═══════════════ -->
+<div class="slide" data-meme="false">
+  <div class="slide-label">Sección 6</div>
+  <h2>Streamlit — <span class="accent">Apps web con Python</span></h2>
+  <div class="two-col" style="align-items:start">
+    <div>
+      <h3>Instalación y primera app</h3>
+      <div class="term"><span class="p">$</span> pip install streamlit</div>
+      <div style="position:relative">
+        <div class="code-file">app.py</div>
+        <pre><code class="language-python">import streamlit as st
+
+st.title("Mi primera app 🎉")
+st.write("Hola desde Streamlit")
+st.write({"dato": 42, "ok": True})</code></pre>
+      </div>
+      <div class="term"><span class="p">$</span> streamlit run app.py<br/><span class="c"># Abre http://localhost:8501</span></div>
+    </div>
+    <div>
+      <h3>Texto y datos</h3>
+      <div style="position:relative">
+        <div class="code-file">app.py</div>
+        <pre><code class="language-python">import streamlit as st
+
+st.title("Título grande")
+st.header("Encabezado")
+st.subheader("Sub-encabezado")
+st.write("Texto o cualquier objeto")
+st.markdown("**Negrita** y *cursiva*")
+
+# Métricas visuales
+st.metric("Personajes", "826", "+12")
+
+# Mostrar JSON bonito
+st.json({"name": "Rick", "id": 1})</code></pre>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ SLIDE 21: STREAMLIT WIDGETS ═══════════════ -->
+<div class="slide" data-meme="false">
+  <div class="slide-label">Sección 6</div>
+  <h2>Streamlit — <span class="accent">Widgets interactivos</span></h2>
+  <div class="two-col" style="align-items:start">
+    <div>
+      <h3>Entradas del usuario</h3>
+      <div style="position:relative">
+        <div class="code-file">app.py</div>
+        <pre><code class="language-python">import streamlit as st
+
+# Texto
+nombre = st.text_input("Buscar personaje")
+
+# Número
+char_id = st.number_input("ID", min_value=1)
+
+# Botón
+if st.button("Buscar"):
+    st.write(f"Buscando: {nombre}")
+
+# Selector
+especie = st.selectbox(
+    "Especie",
+    ["Human", "Alien", "Robot"]
+)
+
+# Slider
+page = st.slider("Página", 1, 42, 1)</code></pre>
+      </div>
+    </div>
+    <div>
+      <h3>Mensajes y layout</h3>
+      <div style="position:relative">
+        <div class="code-file">app.py</div>
+        <pre><code class="language-python">import streamlit as st
+
+# Mensajes de estado
+st.success("Personaje encontrado ✅")
+st.error("Error al conectar ❌")
+st.warning("No hay resultados ⚠️")
+st.info("Tip: usa nombres exactos ℹ️")
+
+# Spinner de carga
+with st.spinner("Consultando API..."):
+    pass  # aquí va tu requests.get(...)
+
+# Columnas
+col1, col2 = st.columns(2)
+with col1:
+    st.metric("Vivos", "439")
+with col2:
+    st.metric("Muertos", "287")</code></pre>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ SLIDE 22: STREAMLIT + REQUESTS ═══════════════ -->
+<div class="slide" data-meme="false">
+  <div class="slide-label">Sección 6</div>
+  <h2>Streamlit + <code>requests</code> = <span class="accent2">Poder real</span></h2>
+  <div style="position:relative;width:100%;max-width:820px">
+    <div class="code-file">app.py</div>
+    <pre><code class="language-python">import streamlit as st
+import requests
+
+st.title("🛸 Rick and Morty — Vista previa")
+
+nombre = st.text_input("Nombre del personaje", "Rick")
+
+if st.button("Buscar"):
+    with st.spinner("Consultando la API del Rickverse..."):
+        r = requests.get(
+            "https://rickandmortyapi.com/api/character",
+            params={"name": nombre}
+        )
+
+    if r.status_code == 200:
+        data = r.json()
+        personajes = data["results"]
+        st.success(f"¡Encontré {data['info']['count']} personaje(s)!")
+
+        cols = st.columns(3)
+        for i, p in enumerate(personajes[:3]):
+            with cols[i]:
+                st.image(p["image"])
+                st.write(f"**{p['name']}**")
+                st.write(p["status"])
+
+    elif r.status_code == 404:
+        st.error("¡Ese personaje no existe en ninguna dimensión! 🌀")</code></pre>
+  </div>
+</div>
+
+<!-- ═══════════════ SLIDE 23: ACTIVIDAD INTRO ═══════════════ -->
+<div class="slide" data-meme="false">
+  <div class="rm-badge">Actividad Guiada</div>
+  <h2 class="rm-accent" style="font-size:2.2rem;text-align:center;margin-bottom:.5rem">🛸 Explorador de Rick and Morty</h2>
+  <p style="text-align:center;color:var(--muted);max-width:580px;margin-bottom:1.5rem">Vamos a construir una app Streamlit que consuma la API oficial de Rick and Morty paso a paso.</p>
+  <div class="card" style="max-width:720px;width:100%;margin-bottom:1rem">
+    <h4>La API que vamos a usar</h4>
+    <div class="url-box"><span class="up u-s">https://</span><span class="up u-d">rickandmortyapi.com</span><span class="up u-r">/api/character</span></div>
+    <ul style="margin-top:.75rem">
+      <li><code>GET /api/character</code> → lista paginada de personajes</li>
+      <li><code>GET /api/character/{id}</code> → un personaje específico</li>
+      <li><code>GET /api/character?name=rick</code> → buscar por nombre</li>
+      <li>Gratis · Sin registro · Sin API key</li>
+    </ul>
+  </div>
+  <div class="term"><span class="p">$</span> pip install streamlit requests</div>
+  <p style="color:var(--muted);font-size:.875rem;margin-top:.5rem">Crea un archivo llamado <code>rick_morty_app.py</code></p>
+</div>
+
+<!-- ═══════════════ SLIDE 24: ACTIVIDAD PASO 1 ═══════════════ -->
+<div class="slide top-align" data-meme="false">
+  <div class="activity-header">
+    <span style="font-size:1.5rem">🛸</span>
+    <h2>Paso 1 — Estructura base y búsqueda</h2>
+    <span class="act-badge">Paso 1 / 3</span>
+  </div>
+  <div style="position:relative;width:100%;max-width:820px">
+    <div class="code-file">rick_morty_app.py</div>
+    <pre><code class="language-python">import streamlit as st
+import requests
+
+st.set_page_config(
+    page_title="Rick & Morty Explorer",
+    page_icon="🛸",
+    layout="wide"
+)
+
+st.title("🛸 Rick and Morty Explorer")
+st.caption("Powered by rickandmortyapi.com")
+
+# --- BÚSQUEDA POR NOMBRE ---
+st.header("🔍 Buscar Personaje")
+
+nombre = st.text_input(
+    "Nombre del personaje",
+    placeholder="Ej: Rick, Morty, Beth, Jerry..."
+)
+
+if st.button("Buscar", type="primary"):
+    with st.spinner("Viajando por las dimensiones..."):
+        r = requests.get(
+            "https://rickandmortyapi.com/api/character",
+            params={"name": nombre}
+        )
+
+    if r.status_code == 200:
+        data = r.json()
+        st.success(f"¡Wubba Lubba Dub Dub! {data['info']['count']} personaje(s) encontrado(s)")
+    elif r.status_code == 404:
+        st.error("¡Ese personaje no existe en ninguna dimensión! 🌀")</code></pre>
+  </div>
+  <div class="term" style="margin-top:.5rem"><span class="p">$</span> streamlit run rick_morty_app.py <span class="c"># Prueba que abre ✅</span></div>
+</div>
+
+<!-- ═══════════════ SLIDE 25: ACTIVIDAD PASO 2 ═══════════════ -->
+<div class="slide top-align" data-meme="false">
+  <div class="activity-header">
+    <span style="font-size:1.5rem">🛸</span>
+    <h2>Paso 2 — Mostrar personajes con imagen</h2>
+    <span class="act-badge">Paso 2 / 3</span>
+  </div>
+  <p style="color:var(--muted);margin-bottom:.75rem">Reemplaza el <code>st.success()</code> del paso anterior con esto:</p>
+  <div style="position:relative;width:100%;max-width:820px">
+    <div class="code-file">rick_morty_app.py — dentro del if status == 200</div>
+    <pre><code class="language-python">    if r.status_code == 200:
+        data = r.json()
+        personajes = data["results"]
+        total = data["info"]["count"]
+
+        st.success(f"¡Encontré {total} personaje(s) en el Rickverse!")
+
+        # Mostrar en columnas de 3
+        cols = st.columns(3)
+        for i, p in enumerate(personajes[:6]):
+            with cols[i % 3]:
+                st.image(p["image"], use_container_width=True)
+                st.write(f"**{p['name']}**")
+
+                estado = "🟢 Vivo" if p["status"] == "Alive" else \
+                         "🔴 Muerto" if p["status"] == "Dead" else "❓ Desconocido"
+                st.write(f"{estado} · {p['species']}")
+                st.caption(f"Origen: {p['origin']['name']}")</code></pre>
+  </div>
+  <div class="callout tip" style="margin-top:.5rem">
+    <div class="callout-icon">📸</div>
+    <div><div class="ctitle">Pro tip</div><p>La API de Rick and Morty incluye <code>p["image"]</code> con la URL directa de la imagen. <code>st.image(url)</code> la descarga y muestra automáticamente.</p></div>
+  </div>
+</div>
+
+<!-- ═══════════════ SLIDE 26: ACTIVIDAD PASO 3 ═══════════════ -->
+<div class="slide top-align" data-meme="false">
+  <div class="activity-header">
+    <span style="font-size:1.5rem">🛸</span>
+    <h2>Paso 3 — Perfil completo por ID</h2>
+    <span class="act-badge">Paso 3 / 3</span>
+  </div>
+  <p style="color:var(--muted);margin-bottom:.75rem">Agrega esto debajo de la búsqueda:</p>
+  <div style="position:relative;width:100%;max-width:820px">
+    <div class="code-file">rick_morty_app.py — agregar al final</div>
+    <pre><code class="language-python">st.divider()
+st.header("🆔 Perfil Completo de Personaje")
+
+char_id = st.number_input("ID del personaje (1 - 826)", min_value=1, max_value=826, value=1)
+
+if st.button("Ver perfil completo"):
+    r = requests.get(f"https://rickandmortyapi.com/api/character/{char_id}")
+
+    if r.status_code == 200:
+        p = r.json()
+        col1, col2 = st.columns([1, 2])
+        with col1:
+            st.image(p["image"], use_container_width=True)
+        with col2:
+            st.title(p["name"])
+            estado = "🟢 Vivo" if p["status"] == "Alive" else \
+                     "🔴 Muerto" if p["status"] == "Dead" else "❓ Desconocido"
+            st.metric("Estado", estado)
+            st.write(f"**Especie:** {p['species']}")
+            st.write(f"**Género:** {p['gender']}")
+            st.write(f"**Origen:** {p['origin']['name']}")
+            st.write(f"**Ubicación actual:** {p['location']['name']}")
+            st.write(f"**Episodios:** {len(p['episode'])}")
+
+        # Mostrar la URL que construimos (¡educativo!)
+        with st.expander("🔗 Ver URL de la petición"):
+            st.code(f"GET https://rickandmortyapi.com/api/character/{char_id}")
+    else:
+        st.error(f"Personaje {char_id} no encontrado")</code></pre>
+  </div>
+</div>
+
+<!-- ═══════════════ SLIDE 27: ACTIVIDAD RETO + LISTA ═══════════════ -->
+<div class="slide" data-meme="false">
+  <div class="slide-label">Actividad</div>
+  <h2>Lista de verificación + <span class="accent3">Reto extra</span></h2>
+  <div class="two-col" style="align-items:start">
+    <div>
+      <h3>Checklist</h3>
+      <ul class="checklist">
+        <li>Instalé streamlit y requests</li>
+        <li>La app abre en el navegador</li>
+        <li>Búsqueda por nombre funciona</li>
+        <li>Las imágenes de los personajes aparecen</li>
+        <li>Búsqueda por ID muestra el perfil</li>
+        <li>El expander muestra la URL real</li>
+      </ul>
+    </div>
+    <div>
+      <h3>Retos extra ⭐</h3>
+      <div class="card" style="margin-bottom:.75rem">
+        <h4>⭐ Filtro por estado</h4>
+        <p>Agrega un <code>st.selectbox("Estado", ["alive", "dead", "unknown"])</code> y pásalo como parámetro en la búsqueda.</p>
+      </div>
+      <div class="card" style="margin-bottom:.75rem">
+        <h4>⭐⭐ Paginación</h4>
+        <p>La API devuelve <code>data["info"]["pages"]</code>. Agrega un slider para cambiar de página.</p>
+      </div>
+      <div class="card">
+        <h4>⭐⭐⭐ Tabla de personajes</h4>
+        <p>Usa <code>import pandas as pd</code> y <code>st.dataframe(pd.DataFrame(personajes))</code> para mostrar todos en una tabla.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ SLIDE 28: MEME FINAL ═══════════════ -->
+<div class="slide" data-meme="true">
+  <div class="meme-slide">
+    <div class="impact-meme meme-bg">
+      <div class="impact-top">Before this class</div>
+      <div class="impact-img">😵‍💫</div>
+      <div class="impact-bottom">"HTTP, JSON, API REST... ¿eso qué es?"</div>
+    </div>
+    <div class="impact-meme" style="margin-top:1.5rem">
+      <div class="impact-top" style="color:var(--accent2)">After this class</div>
+      <div class="impact-img">🧑‍💻</div>
+      <div class="impact-bottom" style="color:var(--accent2)">GET /character?name=rick — 200 OK 🚀</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ SLIDE 29: RESUMEN ═══════════════ -->
+<div class="slide" data-meme="false">
+  <div class="slide-label">Recap</div>
+  <h2>Lo que aprendimos hoy</h2>
+  <div class="card-row" style="flex-wrap:wrap;justify-content:center;max-width:820px">
+    <div class="card" style="min-width:220px">
+      <h4>🌐 HTTP/HTTPS</h4>
+      <ul style="font-size:.82rem">
+        <li>Request / Response</li>
+        <li>Códigos 200, 404, 500</li>
+        <li>HTTP = texto plano</li>
+        <li>HTTPS = encriptado</li>
+      </ul>
+    </div>
+    <div class="card" style="min-width:220px">
+      <h4>🔗 URLs y Métodos</h4>
+      <ul style="font-size:.82rem">
+        <li>Esquema, dominio, path, query</li>
+        <li>GET, POST, PUT, DELETE</li>
+        <li>CRUD = las 4 operaciones</li>
+      </ul>
+    </div>
+    <div class="card" style="min-width:220px">
+      <h4>📦 requests</h4>
+      <ul style="font-size:.82rem">
+        <li>GET con params</li>
+        <li>POST con json=</li>
+        <li>raise_for_status()</li>
+        <li>.json() → dict</li>
+      </ul>
+    </div>
+    <div class="card" style="min-width:220px">
+      <h4>🪄 Streamlit</h4>
+      <ul style="font-size:.82rem">
+        <li>st.title, st.write</li>
+        <li>Widgets: input, button, slider</li>
+        <li>Columnas y mensajes</li>
+        <li>+ requests = app real</li>
+      </ul>
+    </div>
+  </div>
+  <div class="callout info" style="margin-top:1rem">
+    <div class="callout-icon">➡️</div>
+    <div><div class="ctitle">Siguiente módulo</div><p>Ahora vamos a construir el <strong>lado del servidor</strong> con <strong>FastAPI</strong> — vamos a ser nosotros los que respondemos a esas peticiones.</p></div>
+  </div>
+</div>
+
+</div><!-- end deck -->
+
+<!-- NAVIGATION -->
+<div id="nav">
+  <button id="prev" onclick="navigate(-1)">← Anterior</button>
+  <span id="slide-info" style="font-size:.85rem;color:var(--muted)">1 / 29</span>
+  <button id="next" onclick="navigate(1)">Siguiente →</button>
+</div>
+
+<script>
+const slides = document.querySelectorAll('.slide');
+const total = slides.length;
+let cur = 0;
+
+function navigate(dir) {
+  const next = cur + dir;
+  if (next < 0 || next >= total) return;
+  slides[cur].classList.remove('active');
+  cur = next;
+  slides[cur].classList.add('active');
+  updateUI();
+  // highlight any new code blocks
+  slides[cur].querySelectorAll('pre code').forEach(b => hljs.highlightElement(b));
+}
+
+function updateUI() {
+  const pct = ((cur + 1) / total) * 100;
+  document.getElementById('progress-fill').style.width = pct + '%';
+  document.getElementById('counter').textContent = (cur + 1) + ' / ' + total;
+  document.getElementById('slide-info').textContent = (cur + 1) + ' / ' + total;
+  document.getElementById('prev').disabled = cur === 0;
+  document.getElementById('next').disabled = cur === total - 1;
+  // meme tag
+  const isMeme = slides[cur].dataset.meme === 'true';
+  document.getElementById('meme-tag').style.display = isMeme ? 'block' : 'none';
+}
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'ArrowRight' || e.key === 'ArrowDown' || e.key === ' ') {
+    e.preventDefault();
+    navigate(1);
+  }
+  if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+    e.preventDefault();
+    navigate(-1);
+  }
+});
+
+// Init
+slides[0].classList.add('active');
+document.getElementById('prev').disabled = true;
+updateUI();
+</script>
+</body>
+</html>

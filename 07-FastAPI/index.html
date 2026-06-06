@@ -1,0 +1,981 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Introducción a FastAPI</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/python.min.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;500;600;700;800;900&display=swap');
+:root{
+  --bg:#0f1117;--surface:#1a1d2e;--surface2:#252840;--border:#2e3260;
+  --accent:#009688;--acl:#4db6ac;--acc2:#ffd54f;
+  --text:#e2e8f0;--muted:#94a3b8;
+  --green:#22c55e;--red:#ef4444;--yellow:#eab308;--blue:#3b82f6;--purple:#7c6af7;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--text);height:100vh;overflow:hidden}
+#progress-bar{position:fixed;top:0;left:0;right:0;height:4px;background:var(--border);z-index:200}
+#progress-fill{height:100%;background:linear-gradient(90deg,var(--accent),var(--acc2));transition:width .3s ease}
+#counter{position:fixed;top:14px;right:20px;font-size:.78rem;color:var(--muted);z-index:200;background:rgba(15,17,23,.8);padding:4px 10px;border-radius:20px;border:1px solid var(--border)}
+.meme-tag{position:fixed;top:14px;left:20px;background:#ff4b4b;color:#fff;font-size:.7rem;font-weight:700;padding:3px 10px;border-radius:20px;letter-spacing:.5px;text-transform:uppercase;z-index:200;display:none}
+#deck{position:relative;width:100vw;height:100vh;overflow:hidden}
+.slide{
+  position:absolute;inset:0;
+  display:none;flex-direction:column;justify-content:center;align-items:center;
+  padding:56px 80px 90px;
+  overflow-y:auto;
+  animation:fadeIn .35s ease;
+}
+.slide.active{display:flex}
+.slide.top-align{justify-content:flex-start;padding-top:72px}
+@keyframes fadeIn{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+#nav{position:fixed;bottom:0;left:0;right:0;height:60px;display:flex;align-items:center;justify-content:center;gap:1.5rem;background:rgba(15,17,23,.9);backdrop-filter:blur(10px);border-top:1px solid var(--border);z-index:200}
+#nav button{background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:8px 20px;border-radius:8px;cursor:pointer;font-size:.9rem;transition:all .2s}
+#nav button:hover{background:var(--accent);border-color:var(--accent)}
+#nav button:disabled{opacity:.3;cursor:default}
+/* TYPOGRAPHY */
+.slide-label{font-size:.7rem;text-transform:uppercase;letter-spacing:2px;color:var(--muted);margin-bottom:.5rem}
+h2{font-size:1.8rem;font-weight:800;margin-bottom:.5rem}
+h3{font-size:1.2rem;font-weight:700;margin:.75rem 0 .5rem;color:var(--acl)}
+h4{font-size:1rem;font-weight:600;margin:.6rem 0 .35rem}
+p{margin-bottom:.6rem}
+ul,ol{padding-left:1.4rem;margin-bottom:.6rem}
+li{margin-bottom:.3rem;font-size:.875rem}
+/* HERO */
+.hero-badge{display:inline-block;background:var(--accent);color:#fff;font-size:.75rem;font-weight:700;padding:5px 14px;border-radius:20px;letter-spacing:1px;text-transform:uppercase;margin-bottom:1.5rem}
+.hero-title{font-size:3.2rem;font-weight:900;line-height:1.1;text-align:center;background:linear-gradient(135deg,var(--acl),var(--acc2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:1rem}
+.hero-sub{font-size:1.1rem;color:var(--muted);text-align:center;max-width:580px;margin-bottom:2rem}
+.hero-meta{display:flex;gap:2rem;font-size:.875rem;color:var(--muted);flex-wrap:wrap;justify-content:center}
+/* AGENDA */
+.agenda-list{list-style:none;display:flex;flex-direction:column;gap:.75rem;max-width:700px;width:100%}
+.agenda-item{display:flex;align-items:center;gap:1rem;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:.85rem 1.25rem;font-size:.95rem}
+.agenda-num{background:var(--accent);color:#fff;width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.78rem;flex-shrink:0}
+/* CARDS */
+.card-row{display:flex;gap:1rem;flex-wrap:wrap;justify-content:center;width:100%}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:1.25rem;flex:1;min-width:180px}
+.card h4{font-size:.95rem;margin-bottom:.5rem}
+.card p{font-size:.85rem;color:var(--muted);margin:0}
+.card.highlight{border-color:var(--acl)}
+/* TWO COL */
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;width:100%;max-width:860px}
+/* COMPARE */
+.compare-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:1.25rem}
+.compare-card.active{border-color:var(--acl)}
+.compare-card h4{font-size:1rem;margin-bottom:.75rem}
+.compare-card ul{font-size:.85rem;padding-left:1.25rem}
+.compare-card li{margin-bottom:.35rem;color:var(--muted)}
+.compare-card li strong{color:var(--text)}
+/* CALLOUT */
+.callout{border-radius:10px;padding:.9rem 1.1rem;display:flex;gap:.75rem;border-left:4px solid;width:100%;max-width:820px}
+.callout.info{background:#1e3a5f22;border-color:var(--blue)}.callout.info .ct{color:#60a5fa}
+.callout.tip{background:#14532d22;border-color:var(--green)}.callout.tip .ct{color:#4ade80}
+.callout.warn{background:#78350f22;border-color:var(--yellow)}.callout.warn .ct{color:#facc15}
+.callout-icon{font-size:1.2rem;flex-shrink:0;margin-top:2px}
+.ct{font-size:.8rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-bottom:.2rem}
+.callout p{font-size:.875rem;margin:0;color:var(--muted)}
+/* CODE */
+pre{border-radius:10px;border:1px solid var(--border);width:100%;max-width:820px;overflow-x:auto;position:relative}
+pre code.hljs{border-radius:10px;font-size:.825rem}
+.cf{position:absolute;top:8px;right:12px;font-size:.68rem;color:var(--muted);font-family:monospace;text-transform:uppercase}
+code:not(.hljs){background:var(--surface2);color:var(--acl);padding:2px 6px;border-radius:4px;font-size:.875em;font-family:'Fira Code',monospace}
+/* BADGES */
+.badge{display:inline-block;padding:3px 10px;border-radius:6px;font-weight:700;font-size:.82rem;font-family:monospace}
+.get{background:#16a34a22;color:#4ade80;border:1px solid #16a34a}
+.post{background:#2563eb22;color:#60a5fa;border:1px solid #2563eb}
+.put{background:#d9770622;color:#fb923c;border:1px solid #d97706}
+.del{background:#dc262622;color:#f87171;border:1px solid #dc2626}
+.patch{background:#7c3aed22;color:#c4b5fd;border:1px solid #7c3aed}
+/* TABLE */
+table{width:100%;border-collapse:collapse;font-size:.875rem;max-width:820px}
+th{background:var(--surface2);padding:.65rem 1rem;text-align:left;font-weight:600;border-bottom:2px solid var(--border)}
+td{padding:.55rem 1rem;border-bottom:1px solid var(--border)}
+tr:hover td{background:var(--surface)}
+/* TERMINAL */
+.term{background:#000;border-radius:10px;padding:.85rem 1.1rem;font-family:'Fira Code',monospace;font-size:.85rem;width:100%;max-width:820px;border:1px solid #333}
+.term .p{color:#4ade80}.term .c{color:#64748b}.term .o{color:#94a3b8}
+/* STEPS */
+.steps{display:flex;flex-direction:column;gap:.75rem;width:100%;max-width:820px}
+.step{display:flex;gap:1rem;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:.9rem 1.1rem}
+.sn{background:var(--accent);color:#fff;width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.78rem;flex-shrink:0;margin-top:2px}
+.step-body h4{font-size:.9rem;margin-bottom:.2rem}
+.step-body p{font-size:.82rem;color:var(--muted);margin:0}
+/* ACTIVITY */
+.act-header{display:flex;align-items:center;gap:.75rem;margin-bottom:1.25rem}
+.act-header h2{color:var(--acl);font-size:1.5rem}
+.act-badge{background:var(--accent);color:#fff;padding:3px 10px;border-radius:20px;font-size:.72rem;font-weight:700}
+.checklist{list-style:none;display:flex;flex-direction:column;gap:.35rem}
+.checklist li{padding:.35rem 0 .35rem 1.75rem;position:relative;font-size:.875rem}
+.checklist li::before{content:'☐';position:absolute;left:0;color:var(--acl)}
+/* SWAGGER PREVIEW */
+.swagger-box{background:#1a1a1a;border:1px solid #333;border-radius:10px;padding:1.25rem;font-family:monospace;font-size:.85rem;max-width:680px;width:100%}
+.swagger-title{color:var(--acl);font-size:1rem;font-weight:bold;margin-bottom:.85rem}
+.sw-ep{display:flex;align-items:center;gap:.75rem;padding:.5rem .75rem;background:#222;border-radius:6px;margin-bottom:.4rem}
+.sw-path{color:#e0e0e0;font-size:.85rem}
+.sw-desc{color:#9e9e9e;font-size:.78rem;margin-left:auto}
+/* ─── MEMES ─── */
+.meme-slide{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;width:100%;gap:0}
+.impact-meme{display:flex;flex-direction:column;align-items:center;gap:.25rem;max-width:700px}
+.impact-top,.impact-bottom{font-family:'Anton','Arial Black',sans-serif;font-size:2.6rem;color:#fff;text-transform:uppercase;text-shadow:3px 3px 0 #000,-1px -1px 0 #000,1px -1px 0 #000,-1px 1px 0 #000;text-align:center;line-height:1.1}
+.impact-img{font-size:7rem;line-height:1;margin:.35rem 0;filter:drop-shadow(0 4px 16px rgba(0,0,0,.6))}
+.meme-bg{background:linear-gradient(135deg,#0a1f1e,#0a0a0a);border-radius:16px;padding:2rem 2.5rem}
+.drake-meme{display:flex;flex-direction:column;border-radius:12px;overflow:hidden;max-width:680px;border:1px solid var(--border)}
+.drake-row{display:flex;align-items:center;gap:1.25rem;padding:1.1rem 1.5rem;background:var(--surface)}
+.drake-row:first-child{border-bottom:1px solid var(--border)}
+.drake-row.yes{background:var(--surface2)}
+.drake-emoji{font-size:2.5rem;flex-shrink:0}
+.drake-caption{font-size:1rem;font-weight:600;line-height:1.3}
+.drake-row.yes .drake-caption{color:var(--acl)}
+.drake-row:first-child .drake-caption{color:var(--muted);text-decoration:line-through}
+.pika{display:flex;flex-direction:column;align-items:center;gap:.75rem;max-width:580px;text-align:center}
+.pika-setup{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:.75rem 1.5rem;font-size:1rem;color:var(--muted)}
+.pika-face{font-size:5.5rem}
+.pika-caption{font-family:'Anton',sans-serif;font-size:1.8rem;color:var(--red);text-transform:uppercase}
+.objection{font-family:'Anton',sans-serif;font-size:3rem;color:var(--red);letter-spacing:2px;text-shadow:3px 3px 0 #600}
+.tif{display:flex;flex-direction:column;align-items:center;gap:.5rem;max-width:560px;text-align:center}
+.tif-scene{font-size:4.5rem}
+.tif-bubble{background:var(--surface);border:2px solid var(--border);border-radius:12px;padding:1rem 1.5rem;font-size:1.2rem;font-weight:700;margin-top:.5rem}
+.tif-label{font-size:.88rem;color:var(--muted)}
+/* HIGHLIGHT BOX */
+.highlight-box{background:linear-gradient(135deg,#00968815,#ffd54f10);border:1px solid var(--accent);border-radius:10px;padding:1.25rem 1.5rem;max-width:820px;width:100%}
+</style>
+</head>
+<body>
+
+<div id="progress-bar"><div id="progress-fill"></div></div>
+<div id="counter">1 / 26</div>
+<div class="meme-tag" id="meme-tag">🤣 Meme</div>
+
+<div id="deck">
+
+<!-- ════════ SLIDE 1: PORTADA ════════ -->
+<div class="slide" data-meme="false">
+  <div class="hero-badge">Módulo 7</div>
+  <h1 class="hero-title">Introducción a FastAPI</h1>
+  <p class="hero-sub">Construye tu propia API REST en Python — con validación automática, documentación incluida y velocidad de framework moderno.</p>
+  <div class="hero-meta">
+    <span>⏱ ~60 min</span>
+    <span>📦 <code>fastapi</code> · <code>uvicorn</code> · <code>pydantic</code></span>
+    <span>⚡ El framework que usan Netflix y Uber</span>
+  </div>
+</div>
+
+<!-- ════════ SLIDE 2: CONTEXTO ════════ -->
+<div class="slide" data-meme="false">
+  <div class="slide-label">Contexto</div>
+  <h2>¿Dónde estamos en el mapa?</h2>
+  <div class="steps" style="max-width:700px">
+    <div class="step">
+      <div class="sn">✅</div>
+      <div class="step-body"><h4>Módulo 6 — Cliente (Streamlit + requests)</h4><p>Aprendimos a <strong>consumir</strong> APIs existentes. Éramos el que pide.</p></div>
+    </div>
+    <div class="step">
+      <div class="sn" style="background:var(--acc2);color:#000">⚡</div>
+      <div class="step-body"><h4>Módulo 7 — Servidor (FastAPI)</h4><p>Ahora vamos a <strong>construir</strong> la API. Vamos a ser los que responden.</p></div>
+    </div>
+  </div>
+  <div class="callout info" style="margin-top:1rem;max-width:700px">
+    <div class="callout-icon">🔄</div>
+    <div><div class="ct">El ciclo completo</div><p>Streamlit hace el request → FastAPI lo recibe → procesa → responde JSON → Streamlit lo muestra. Hoy construimos el lado derecho de ese ciclo.</p></div>
+  </div>
+</div>
+
+<!-- ════════ SLIDE 3: AGENDA ════════ -->
+<div class="slide top-align" data-meme="false">
+  <div class="slide-label">Hoja de ruta</div>
+  <h2>¿Qué vemos hoy?</h2>
+  <ul class="agenda-list" style="margin-top:1rem">
+    <li class="agenda-item"><div class="agenda-num">1</div>¿Qué es FastAPI y por qué usarlo?</li>
+    <li class="agenda-item"><div class="agenda-num">2</div>Instalación + Uvicorn (el motor del servidor)</li>
+    <li class="agenda-item"><div class="agenda-num">3</div>Tu primera API en 10 líneas</li>
+    <li class="agenda-item"><div class="agenda-num">4</div>Documentación automática con Swagger UI</li>
+    <li class="agenda-item"><div class="agenda-num">5</div>Parámetros: path, query y body</li>
+    <li class="agenda-item"><div class="agenda-num">6</div>Validación con Pydantic</li>
+    <li class="agenda-item"><div class="agenda-num">7</div>CRUD completo: GET, POST, PUT, DELETE</li>
+    <li class="agenda-item"><div class="agenda-num">🏗️</div>Actividad: API de Estudiantes + Streamlit</li>
+  </ul>
+</div>
+
+<!-- ════════ SLIDE 4: MEME ════════ -->
+<div class="slide" data-meme="true">
+  <div class="meme-slide">
+    <div class="drake-meme" style="max-width:660px">
+      <div class="drake-row">
+        <div class="drake-emoji">🙅‍♂️</div>
+        <div class="drake-caption">Pasar 3 horas escribiendo HTML, CSS y JS para el backend</div>
+      </div>
+      <div class="drake-row yes">
+        <div class="drake-emoji">⚡</div>
+        <div class="drake-caption">FastAPI: decorador + función = API lista en 30 segundos</div>
+      </div>
+    </div>
+    <p style="color:var(--muted);font-size:.9rem;margin-top:1.5rem">Y de paso te genera la documentación sola 😌</p>
+  </div>
+</div>
+
+<!-- ════════ SLIDE 5: QUÉ ES FASTAPI ════════ -->
+<div class="slide" data-meme="false">
+  <div class="slide-label">Sección 1</div>
+  <h2>¿Qué es <span style="color:var(--acl)">FastAPI</span>?</h2>
+  <p style="text-align:center;color:var(--muted);margin-bottom:1.25rem;max-width:600px">Framework moderno para crear APIs REST con Python. Creado en 2018 por Sebastián Ramírez (Colombia 🇨🇴).</p>
+  <div class="card-row" style="max-width:820px">
+    <div class="card"><h4>⚡ Muy rápido</h4><p>Comparable a Node.js y Go. Uno de los más rápidos en Python.</p></div>
+    <div class="card"><h4>📄 Docs automáticas</h4><p>Genera Swagger UI y ReDoc sin escribir nada extra.</p></div>
+    <div class="card highlight"><h4>✅ Validación incluida</h4><p>Pydantic valida los datos automáticamente. Menos bugs.</p></div>
+    <div class="card"><h4>🐍 Python moderno</h4><p>Usa type hints. El código es limpio y autodocumentado.</p></div>
+  </div>
+  <div class="callout tip" style="margin-top:1rem">
+    <div class="callout-icon">🌎</div>
+    <div><div class="ct">Lo usan</div><p>Netflix, Uber, Microsoft, NASA y miles de startups. Es el framework Python que más creció en los últimos años.</p></div>
+  </div>
+</div>
+
+<!-- ════════ SLIDE 6: FASTAPI VS FLASK ════════ -->
+<div class="slide" data-meme="false">
+  <div class="slide-label">Sección 1</div>
+  <h2>FastAPI <span style="color:var(--muted)">vs</span> Flask</h2>
+  <div class="two-col" style="max-width:720px">
+    <div class="compare-card">
+      <h4 style="color:var(--muted)">🍶 Flask (el clásico)</h4>
+      <ul>
+        <li>Más antiguo (2010)</li>
+        <li>Más simple para webs pequeñas</li>
+        <li><strong>Sin validación automática</strong></li>
+        <li><strong>Sin docs automáticas</strong></li>
+        <li>Más lento</li>
+        <li>Aún muy popular</li>
+      </ul>
+    </div>
+    <div class="compare-card active">
+      <h4 style="color:var(--acl)">⚡ FastAPI (moderno)</h4>
+      <ul>
+        <li>Más reciente (2018)</li>
+        <li>Ideal para APIs REST</li>
+        <li><strong>Validación con Pydantic ✅</strong></li>
+        <li><strong>Docs Swagger automáticas ✅</strong></li>
+        <li>Muy rápido ✅</li>
+        <li>El que usan hoy en la industria</li>
+      </ul>
+    </div>
+  </div>
+  <div class="callout info" style="margin-top:1rem;max-width:720px">
+    <div class="callout-icon">💡</div>
+    <div><div class="ct">Para este curso</div><p>Usamos FastAPI porque te prepara mejor para el mercado laboral y tiene menos código repetitivo (boilerplate).</p></div>
+  </div>
+</div>
+
+<!-- ════════ SLIDE 7: INSTALACIÓN ════════ -->
+<div class="slide" data-meme="false">
+  <div class="slide-label">Sección 2</div>
+  <h2>Instalación y <span style="color:var(--acl)">Uvicorn</span></h2>
+  <div class="two-col" style="align-items:start;max-width:820px">
+    <div>
+      <h3>Instalar</h3>
+      <div class="term"><span class="p">$</span> pip install fastapi uvicorn</div>
+      <div class="card" style="margin-top:.75rem">
+        <h4>¿Qué es uvicorn? (la respuesta real)</h4>
+        <p>FastAPI sabe <em>construir</em> una API, pero <strong>no sabe escuchar en un puerto de red</strong>. Uvicorn abre el puerto, recibe los bytes HTTP que llegan, los convierte en objetos Python, y se los pasa a FastAPI. FastAPI procesa y responde. Es separación de responsabilidades.</p>
+        <p style="font-size:.8rem;color:var(--muted);margin-top:.4rem">Técnicamente: FastAPI es un framework <strong>ASGI</strong> (Asynchronous Server Gateway Interface) y Uvicorn es el servidor ASGI que lo ejecuta. ASGI permite manejar miles de conexiones concurrentes, de ahí la velocidad.</p>
+      </div>
+    </div>
+    <div>
+      <h3>Cómo ejecutar</h3>
+      <div class="term">
+        <span class="p">$</span> uvicorn main:app --reload<br/>
+        <span class="c">#         │    │    └── Recarga al guardar</span><br/>
+        <span class="c">#         │    └── Variable 'app' en main.py</span><br/>
+        <span class="c">#         └── Archivo main.py (sin .py)</span>
+      </div>
+      <div class="callout tip" style="margin-top:.75rem">
+        <div class="callout-icon">🔄</div>
+        <div><div class="ct">dev vs producción</div><p><code>--reload</code> solo para desarrollo (revisa cambios, más lento). En producción: <code>uvicorn main:app --workers 4</code> para usar todos los núcleos del CPU.</p></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════ SLIDE 8: PRIMERA API ════════ -->
+<div class="slide" data-meme="false">
+  <div class="slide-label">Sección 3</div>
+  <h2>Tu Primera API en <span style="color:var(--acl)">10 líneas</span></h2>
+  <div class="two-col" style="align-items:start">
+    <div>
+      <h3>Código</h3>
+      <div style="position:relative">
+        <div class="cf">main.py</div>
+        <pre><code class="language-python">from fastapi import FastAPI
+
+# 1. Crear la aplicación
+app = FastAPI()
+
+# 2. Endpoint GET en "/"
+@app.get("/")
+def inicio():
+    return {"mensaje": "¡Mi API funciona! 🎉"}
+
+# 3. Otro endpoint
+@app.get("/saludo/{nombre}")
+def saludar(nombre: str):
+    return {"saludo": f"Hola, {nombre}!"}</code></pre>
+      </div>
+    </div>
+    <div>
+      <h3>Correr y probar</h3>
+      <div class="term" style="margin-bottom:.75rem">
+        <span class="p">$</span> uvicorn main:app --reload<br/>
+        <span class="o">INFO: running on http://127.0.0.1:8000</span>
+      </div>
+      <table style="font-size:.82rem">
+        <thead><tr><th>URL</th><th>Respuesta</th></tr></thead>
+        <tbody>
+          <tr><td><code>localhost:8000/</code></td><td><code>{"mensaje": "¡Mi API funciona!"}</code></td></tr>
+          <tr><td><code>localhost:8000/saludo/Ana</code></td><td><code>{"saludo": "Hola, Ana!"}</code></td></tr>
+          <tr><td><code>localhost:8000/docs</code></td><td>📄 Swagger UI automático</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ════════ SLIDE 9: DECORADORES ════════ -->
+<div class="slide" data-meme="false">
+  <div class="slide-label">Sección 3</div>
+  <h2>¿Qué es un <span style="color:var(--acl)">decorador</span>?</h2>
+  <div style="position:relative;width:100%;max-width:820px">
+    <div class="cf">main.py — anotado</div>
+    <pre><code class="language-python">from fastapi import FastAPI
+
+app = FastAPI()          # Crear la "aplicación" (el servidor)
+
+@app.get("/personajes")  # ← DECORADOR
+#   │    └── La ruta URL que activa esta función
+#   └── El método HTTP (GET, POST, PUT, DELETE)
+def listar_personajes():
+    # ↑ Esta función se ejecuta cuando llegue GET /personajes
+    return [{"nombre": "Rick"}, {"nombre": "Morty"}]
+    # Lo que retornes = JSON que recibe el cliente</code></pre>
+  </div>
+  <div class="callout info" style="margin-top:.75rem">
+    <div class="callout-icon">🏷️</div>
+    <div><div class="ct">El decorador como etiqueta</div><p>El <code>@app.get("/personajes")</code> le dice a FastAPI: "cuando llegue una petición GET a la ruta <code>/personajes</code>, ejecuta la función de abajo". Es como poner un letrero en la puerta. Python permite que una función "envuelva" a otra — eso es un decorador.</p></div>
+  </div>
+  <div class="callout warn" style="margin-top:.5rem">
+    <div class="callout-icon">⚠️</div>
+    <div><div class="ct">¿Por qué el decorador va ENCIMA de la función?</div><p>Porque en Python, <code>@algo</code> es azúcar sintáctica para <code>funcion = algo(funcion)</code>. FastAPI registra tu función en su tabla de rutas en el momento en que Python la lee. Si no pones el decorador, la función existe pero FastAPI no sabe que debe llamarla cuando llegue una petición.</p></div>
+  </div>
+  <div class="card-row" style="margin-top:.75rem;max-width:820px">
+    <div class="card" style="text-align:center"><code>@app.get()</code><p>Leer datos</p></div>
+    <div class="card" style="text-align:center"><code>@app.post()</code><p>Crear datos</p></div>
+    <div class="card" style="text-align:center"><code>@app.put()</code><p>Actualizar</p></div>
+    <div class="card" style="text-align:center"><code>@app.delete()</code><p>Eliminar</p></div>
+  </div>
+</div>
+
+<!-- ════════ SLIDE 10: MEME SWAGGER ════════ -->
+<div class="slide" data-meme="true">
+  <div class="meme-slide">
+    <div class="impact-meme meme-bg">
+      <div class="impact-top">FastAPI cuando terminas de escribir tu primer endpoint</div>
+      <div class="impact-img">🪄📄</div>
+      <div class="impact-bottom">"Aquí tienes la documentación automática. De nada."</div>
+    </div>
+    <p style="color:var(--muted);font-size:.9rem;margin-top:1.5rem">Abre <code>localhost:8000/docs</code> — ya tienes Swagger UI sin escribir nada extra</p>
+  </div>
+</div>
+
+<!-- ════════ SLIDE 11: SWAGGER UI ════════ -->
+<div class="slide" data-meme="false">
+  <div class="slide-label">Sección 4</div>
+  <h2>Documentación automática — <span style="color:var(--acc2)">Swagger UI</span></h2>
+  <p style="text-align:center;color:var(--muted);margin-bottom:1rem">Con tu API corriendo, visita <code>localhost:8000/docs</code></p>
+  <div class="swagger-box">
+    <div class="swagger-title">⚡ Mi API — 1.0.0</div>
+    <div class="sw-ep"><span class="badge get">GET</span><span class="sw-path">/</span><span class="sw-desc">Inicio</span></div>
+    <div class="sw-ep"><span class="badge get">GET</span><span class="sw-path">/saludo/{nombre}</span><span class="sw-desc">Saludar</span></div>
+    <div class="sw-ep"><span class="badge get">GET</span><span class="sw-path">/estudiantes</span><span class="sw-desc">Listar estudiantes</span></div>
+    <div class="sw-ep"><span class="badge post">POST</span><span class="sw-path">/estudiantes</span><span class="sw-desc">Crear estudiante</span></div>
+    <div class="sw-ep"><span class="badge del">DELETE</span><span class="sw-path">/estudiantes/{id}</span><span class="sw-desc">Eliminar estudiante</span></div>
+    <p style="color:#9e9e9e;font-size:.78rem;margin-top:.75rem;font-style:italic">↑ Puedes hacer click en cada endpoint y probarlo directamente desde el navegador</p>
+  </div>
+  <div class="two-col" style="max-width:820px;margin-top:.75rem">
+    <div class="callout tip">
+      <div class="callout-icon">🎁</div>
+      <div><div class="ct">¿Por qué se genera sola?</div><p>FastAPI lee tus decoradores, type hints y modelos Pydantic y construye un archivo JSON en <code>/openapi.json</code> siguiendo el estándar <strong>OpenAPI 3.0</strong>. Swagger UI lee ese JSON y genera la interfaz. Sin ese JSON, no habría docs.</p></div>
+    </div>
+    <div class="callout info">
+      <div class="callout-icon">🔌</div>
+      <div><div class="ct">OpenAPI = el contrato</div><p>El archivo <code>/openapi.json</code> es el "contrato" de tu API. Otros equipos (frontend, mobile) pueden importarlo en Postman o generar código cliente automáticamente a partir de él.</p></div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════ SLIDE 12: PATH PARAMS ════════ -->
+<div class="slide" data-meme="false">
+  <div class="slide-label">Sección 5</div>
+  <h2>Tipo 1 — <span style="color:var(--acl)">Path Parameters</span></h2>
+  <p style="text-align:center;color:var(--muted);margin-bottom:1rem">Van dentro de la ruta. Identifican un recurso específico.</p>
+  <div style="position:relative;width:100%;max-width:820px">
+    <div class="cf">main.py</div>
+    <pre><code class="language-python">from fastapi import FastAPI
+
+app = FastAPI()
+
+@app.get("/personajes/{personaje_id}")
+def obtener_personaje(personaje_id: int):
+    #                              ↑ FastAPI convierte el texto de la URL a int
+    return {
+        "id": personaje_id,
+        "mensaje": f"Buscando personaje con ID {personaje_id}"
+    }
+
+@app.get("/episodios/{temporada}/{numero}")
+def obtener_episodio(temporada: int, numero: int):
+    return {
+        "temporada": temporada,
+        "episodio": numero,
+        "codigo": f"S0{temporada}E0{numero}"
+    }</code></pre>
+  </div>
+  <div class="term" style="margin-top:.5rem">
+    <span class="c"># GET localhost:8000/personajes/1</span><br/>
+    <span class="o">{"id": 1, "mensaje": "Buscando personaje con ID 1"}</span><br/><br/>
+    <span class="c"># GET localhost:8000/episodios/3/7</span><br/>
+    <span class="o">{"temporada": 3, "episodio": 7, "codigo": "S03E07"}</span>
+  </div>
+</div>
+
+<!-- ════════ SLIDE 13: QUERY PARAMS ════════ -->
+<div class="slide" data-meme="false">
+  <div class="slide-label">Sección 5</div>
+  <h2>Tipo 2 — <span style="color:var(--acl)">Query Parameters</span></h2>
+  <p style="text-align:center;color:var(--muted);margin-bottom:1rem">Aparecen después del <code>?</code> en la URL. Sirven para filtrar o paginar.</p>
+  <div style="position:relative;width:100%;max-width:820px">
+    <div class="cf">main.py</div>
+    <pre><code class="language-python">from fastapi import FastAPI
+
+app = FastAPI()
+
+@app.get("/personajes")
+def listar_personajes(
+    especie: str = "todos",   # valor por defecto
+    estado: str = "todos",    # valor por defecto
+    page: int = 1             # valor por defecto
+):
+    return {
+        "filtro_especie": especie,
+        "filtro_estado": estado,
+        "pagina": page
+    }</code></pre>
+  </div>
+  <div class="term" style="margin-top:.5rem">
+    <span class="c"># GET localhost:8000/personajes</span><br/>
+    <span class="o">{"filtro_especie": "todos", "filtro_estado": "todos", "pagina": 1}</span><br/><br/>
+    <span class="c"># GET localhost:8000/personajes?especie=Human&estado=Alive&page=2</span><br/>
+    <span class="o">{"filtro_especie": "Human", "filtro_estado": "Alive", "pagina": 2}</span>
+  </div>
+</div>
+
+<!-- ════════ SLIDE 14: MEME PYDANTIC ════════ -->
+<div class="slide" data-meme="true">
+  <div class="meme-slide">
+    <p style="color:var(--muted);font-size:.9rem;margin-bottom:1rem">Cuando el cliente envía <code>edad: "veintidós"</code> en vez de un número:</p>
+    <div class="pika" style="gap:.5rem">
+      <div class="pika-setup">FastAPI con Pydantic validando los datos</div>
+      <div style="font-size:.9rem;color:var(--muted)">⬇️</div>
+      <div class="objection">OBJECTION!</div>
+      <div class="pika-face">🔍</div>
+      <div class="pika-caption">422 Unprocessable Entity</div>
+      <div style="font-size:.82rem;color:var(--muted);margin-top:.25rem">"value is not a valid integer" — y te dice exactamente dónde está el error</div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════ SLIDE 15: PYDANTIC MODELOS ════════ -->
+<div class="slide" data-meme="false">
+  <div class="slide-label">Sección 6</div>
+  <h2>Pydantic — <span style="color:var(--acl)">Validación de datos</span></h2>
+  <p style="text-align:center;color:var(--muted);margin-bottom:1rem">Define el molde de los datos y FastAPI valida automáticamente todo lo que recibe.</p>
+  <div class="two-col" style="align-items:start">
+    <div>
+      <h3>Definir un modelo</h3>
+      <div style="position:relative">
+        <div class="cf">main.py</div>
+        <pre><code class="language-python">from fastapi import FastAPI
+from pydantic import BaseModel
+from typing import Optional
+
+app = FastAPI()
+
+# Modelo = molde de datos
+class Estudiante(BaseModel):
+    nombre: str           # obligatorio
+    email: str            # obligatorio
+    carrera: str          # obligatorio
+    semestre: int         # obligatorio
+    promedio: Optional[float] = None  # opcional
+
+@app.post("/estudiantes")
+def crear_estudiante(est: Estudiante):
+    # FastAPI ya validó que est tiene todos los campos
+    return {"mensaje": "creado", "datos": est}</code></pre>
+      </div>
+    </div>
+    <div>
+      <h3>Qué valida automáticamente</h3>
+      <table style="font-size:.8rem">
+        <thead><tr><th>Envías</th><th>Resultado</th></tr></thead>
+        <tbody>
+          <tr><td>Todos los campos correctos</td><td>✅ 200/201 OK</td></tr>
+          <tr><td>Falta un campo obligatorio</td><td>❌ 422 Validation Error</td></tr>
+          <tr><td><code>semestre: "cuatro"</code></td><td>❌ 422 "not a valid integer"</td></tr>
+          <tr><td>Campo extra desconocido</td><td>✅ Se ignora silenciosamente</td></tr>
+        </tbody>
+      </table>
+      <div class="callout tip" style="margin-top:.75rem">
+        <div class="callout-icon">🛡️</div>
+        <div><div class="ct">Sin Pydantic tendrías que escribir esto</div><p>
+          <code>if not nombre: raise ValueError(...)</code><br/>
+          <code>if not isinstance(semestre, int): raise ValueError(...)</code><br/>
+          <code>if not 1 &lt;= semestre &lt;= 12: raise ValueError(...)</code><br/>
+          Para cada campo. Pydantic lo hace en una línea: <code>semestre: int</code>.
+        </p></div>
+      </div>
+      <div class="callout info" style="margin-top:.5rem">
+        <div class="callout-icon">🔄</div>
+        <div><div class="ct">Pydantic también convierte tipos</div><p>Si envías <code>semestre: "4"</code> (string), Pydantic convierte a <code>4</code> (int) si puede. Si envías <code>semestre: "cuatro"</code> → 422 error. Es inteligente, no estricto.</p></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════ SLIDE 16: REQUEST BODY ════════ -->
+<div class="slide" data-meme="false">
+  <div class="slide-label">Sección 5</div>
+  <h2>Tipo 3 — <span style="color:var(--acl)">Request Body</span></h2>
+  <p style="text-align:center;color:var(--muted);margin-bottom:1rem">Se usa en POST, PUT, PATCH. Los datos viajan dentro de la petición, no en la URL.</p>
+  <div class="callout info" style="margin-bottom:1rem">
+    <div class="callout-icon">💡</div>
+    <div><div class="ct">¿Cuándo usar cada parámetro?</div><p><strong>Path param</strong>: identificar cuál recurso (<code>/estudiantes/5</code>) · <strong>Query param</strong>: filtrar o paginar (<code>?carrera=sistemas</code>) · <strong>Body</strong>: enviar datos complejos en POST/PUT</p></div>
+  </div>
+  <div style="position:relative;width:100%;max-width:820px">
+    <div class="cf">main.py — los 3 tipos juntos</div>
+    <pre><code class="language-python">from fastapi import FastAPI
+from pydantic import BaseModel
+
+app = FastAPI()
+
+class EstudianteUpdate(BaseModel):
+    nombre: str
+    promedio: float
+
+# Path param: {estudiante_id}
+# Query param: ?notificar=true
+# Body: EstudianteUpdate (JSON en el cuerpo)
+@app.put("/estudiantes/{estudiante_id}")
+def actualizar_estudiante(
+    estudiante_id: int,           # path param
+    notificar: bool = False,      # query param
+    datos: EstudianteUpdate = ... # body
+):
+    return {
+        "id": estudiante_id,
+        "notificado": notificar,
+        "nuevo_nombre": datos.nombre
+    }</code></pre>
+  </div>
+</div>
+
+<!-- ════════ SLIDE 17: HTTPEXCEPTION ════════ -->
+<div class="slide" data-meme="false">
+  <div class="slide-label">Sección 7</div>
+  <h2>HTTPException — <span style="color:var(--acl)">Manejo de errores</span></h2>
+  <p style="text-align:center;color:var(--muted);margin-bottom:1rem">Cuando algo sale mal, responde con el código HTTP correcto.</p>
+  <div style="position:relative;width:100%;max-width:820px">
+    <div class="cf">main.py</div>
+    <pre><code class="language-python">from fastapi import FastAPI, HTTPException
+
+app = FastAPI()
+
+estudiantes_db = {1: "Ana", 2: "Carlos", 3: "María"}
+
+@app.get("/estudiantes/{est_id}")
+def obtener_estudiante(est_id: int):
+    if est_id not in estudiantes_db:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Estudiante {est_id} no encontrado"
+        )
+    return {"id": est_id, "nombre": estudiantes_db[est_id]}
+
+
+# Respuesta cuando el ID no existe:
+# {
+#   "detail": "Estudiante 99 no encontrado"
+# }
+# Status: 404 Not Found</code></pre>
+  </div>
+  <div class="two-col" style="max-width:820px;margin-top:.5rem">
+    <div class="callout tip">
+      <div class="callout-icon">🎯</div>
+      <div><div class="ct">Patrón estándar</div><p>Siempre verifica si el recurso existe antes de operar. Si no existe → <code>raise HTTPException(status_code=404, ...)</code>. El <code>raise</code> detiene la función inmediatamente y FastAPI responde con el error.</p></div>
+    </div>
+    <div class="callout info">
+      <div class="callout-icon">💡</div>
+      <div><div class="ct">¿Por qué importa el código correcto?</div><p>El cliente (<code>requests</code>, Streamlit, el navegador) toma decisiones según el código. <code>404</code> → "no encontrado, quizás el ID está mal". <code>500</code> → "error del servidor, reintenta". Si mandas 200 para todo, el cliente no puede saber qué pasó.</p></div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════ SLIDE 18: MEME CRUD ════════ -->
+<div class="slide" data-meme="true">
+  <div class="meme-slide">
+    <div class="tif" style="max-width:640px">
+      <p style="color:var(--muted);font-size:.9rem">El programador junior explicando su "API compleja":</p>
+      <div class="tif-scene">🧑‍💻</div>
+      <div class="tif-bubble">"Es un CRUD básico"</div>
+      <div class="tif-label">— El 95% de todas las APIs del mundo, técnicamente —</div>
+    </div>
+    <div class="highlight-box" style="margin-top:1.5rem;text-align:center">
+      <p style="font-size:1.05rem;font-weight:700">Y eso está completamente bien. CRUD es el núcleo de casi todo.</p>
+      <p style="font-size:.875rem;color:var(--muted);margin-top:.25rem">Create → Read → Update → Delete = base de toda app de datos</p>
+    </div>
+  </div>
+</div>
+
+<!-- ════════ SLIDE 19: CRUD TABLA ════════ -->
+<div class="slide" data-meme="false">
+  <div class="slide-label">Sección 7</div>
+  <h2>CRUD Completo con FastAPI</h2>
+  <table style="max-width:820px;margin-bottom:1rem">
+    <thead><tr><th>Operación</th><th>Decorador</th><th>Ruta</th><th>Qué hace</th><th>Status</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Create</strong></td><td><code>@app.post()</code></td><td><code>/estudiantes</code></td><td>Crea un estudiante</td><td>201</td></tr>
+      <tr><td><strong>Read All</strong></td><td><code>@app.get()</code></td><td><code>/estudiantes</code></td><td>Lista todos</td><td>200</td></tr>
+      <tr><td><strong>Read One</strong></td><td><code>@app.get()</code></td><td><code>/estudiantes/{id}</code></td><td>Un específico</td><td>200</td></tr>
+      <tr><td><strong>Update</strong></td><td><code>@app.put()</code></td><td><code>/estudiantes/{id}</code></td><td>Modifica uno</td><td>200</td></tr>
+      <tr><td><strong>Delete</strong></td><td><code>@app.delete()</code></td><td><code>/estudiantes/{id}</code></td><td>Elimina uno</td><td>200</td></tr>
+    </tbody>
+  </table>
+  <div class="callout info">
+    <div class="callout-icon">⚠️</div>
+    <div><div class="ct">Base de datos en memoria</div><p>En esta clase usaremos un diccionario Python como "base de datos". En producción usarías PostgreSQL o SQLite. El CRUD es idéntico — solo cambia dónde guardas los datos.</p></div>
+  </div>
+</div>
+
+<!-- ════════ SLIDE 20: CRUD CÓDIGO GET/POST ════════ -->
+<div class="slide top-align" data-meme="false">
+  <div class="slide-label">Sección 7</div>
+  <h2>CRUD — GET y POST</h2>
+  <div style="position:relative;width:100%;max-width:820px">
+    <div class="cf">main.py — Create + Read</div>
+    <pre><code class="language-python">from fastapi import FastAPI, HTTPException
+from pydantic import BaseModel
+from typing import Optional
+
+app = FastAPI(title="API Estudiantes")
+
+class Estudiante(BaseModel):
+    nombre: str; email: str; carrera: str; semestre: int
+    promedio: Optional[float] = None
+
+class EstudianteConID(Estudiante):
+    id: int
+
+db: dict[int, EstudianteConID] = {}
+contador = 0
+
+# READ ALL
+@app.get("/estudiantes", response_model=list[EstudianteConID])
+def listar(carrera: Optional[str] = None):
+    result = list(db.values())
+    if carrera:
+        result = [e for e in result if e.carrera.lower() == carrera.lower()]
+    return result
+
+# CREATE
+@app.post("/estudiantes", response_model=EstudianteConID, status_code=201)
+def crear(est: Estudiante):
+    global contador
+    contador += 1
+    nuevo = EstudianteConID(id=contador, **est.dict())
+    db[contador] = nuevo
+    return nuevo</code></pre>
+  </div>
+</div>
+
+<!-- ════════ SLIDE 21: CRUD CÓDIGO PUT/DELETE ════════ -->
+<div class="slide top-align" data-meme="false">
+  <div class="slide-label">Sección 7</div>
+  <h2>CRUD — GET por ID, PUT y DELETE</h2>
+  <div style="position:relative;width:100%;max-width:820px">
+    <div class="cf">main.py — Read One + Update + Delete</div>
+    <pre><code class="language-python"># READ ONE
+@app.get("/estudiantes/{est_id}", response_model=EstudianteConID)
+def obtener(est_id: int):
+    if est_id not in db:
+        raise HTTPException(status_code=404, detail=f"Estudiante {est_id} no encontrado")
+    return db[est_id]
+
+# UPDATE
+@app.put("/estudiantes/{est_id}", response_model=EstudianteConID)
+def actualizar(est_id: int, datos: Estudiante):
+    if est_id not in db:
+        raise HTTPException(status_code=404, detail=f"Estudiante {est_id} no encontrado")
+    actualizado = EstudianteConID(id=est_id, **datos.dict())
+    db[est_id] = actualizado
+    return actualizado
+
+# DELETE
+@app.delete("/estudiantes/{est_id}")
+def eliminar(est_id: int):
+    if est_id not in db:
+        raise HTTPException(status_code=404, detail=f"Estudiante {est_id} no encontrado")
+    eliminado = db.pop(est_id)
+    return {"mensaje": f"'{eliminado.nombre}' eliminado", "id": est_id}</code></pre>
+  </div>
+</div>
+
+<!-- ════════ SLIDE 22: ACTIVIDAD INTRO ════════ -->
+<div class="slide" data-meme="false">
+  <div class="hero-badge" style="background:var(--accent)">Actividad Guiada</div>
+  <h2 style="color:var(--acl);font-size:2.1rem;text-align:center;margin-bottom:.5rem">🏗️ API de Estudiantes</h2>
+  <p style="text-align:center;color:var(--muted);max-width:580px;margin-bottom:1.5rem">Construimos paso a paso una API REST completa. Al final la conectamos con Streamlit.</p>
+  <div class="card-row" style="max-width:720px">
+    <div class="card">
+      <h4>📋 Lo que vamos a construir</h4>
+      <ul style="font-size:.85rem">
+        <li>GET /estudiantes — listar todos</li>
+        <li>GET /estudiantes/{id} — ver uno</li>
+        <li>POST /estudiantes — crear</li>
+        <li>DELETE /estudiantes/{id} — eliminar</li>
+        <li>Validación con Pydantic</li>
+        <li>Docs en /docs automático</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h4>🔧 Archivos</h4>
+      <div class="term" style="font-size:.8rem">
+        mi_api/<br/>
+        ├── estudiantes_api.py  ← FastAPI<br/>
+        └── frontend.py         ← Streamlit (bonus)
+      </div>
+      <div class="term" style="margin-top:.5rem">
+        <span class="p">$</span> pip install fastapi uvicorn
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════ SLIDE 23: ACTIVIDAD PASO 1 ════════ -->
+<div class="slide top-align" data-meme="false">
+  <div class="act-header">
+    <span style="font-size:1.5rem">🏗️</span>
+    <h2>Paso 1 — Modelo y datos iniciales</h2>
+    <span class="act-badge">1 / 4</span>
+  </div>
+  <div style="position:relative;width:100%;max-width:820px">
+    <div class="cf">estudiantes_api.py</div>
+    <pre><code class="language-python">from fastapi import FastAPI, HTTPException
+from pydantic import BaseModel
+from typing import Optional
+
+app = FastAPI(title="API de Estudiantes", version="1.0")
+
+class Estudiante(BaseModel):
+    nombre: str; email: str; carrera: str; semestre: int
+    promedio: Optional[float] = None
+
+class EstudianteConID(Estudiante):
+    id: int
+
+db: dict[int, EstudianteConID] = {}
+id_c = 0
+
+# Datos de prueba
+for d in [
+    Estudiante(nombre="Ana García", email="ana@uni.edu", carrera="Sistemas", semestre=4, promedio=4.2),
+    Estudiante(nombre="Carlos López", email="carlos@uni.edu", carrera="Sistemas", semestre=6, promedio=3.8),
+    Estudiante(nombre="María Torres", email="maria@uni.edu", carrera="Industrial", semestre=2, promedio=4.5),
+]:
+    id_c += 1; db[id_c] = EstudianteConID(id=id_c, **d.dict())</code></pre>
+  </div>
+  <div class="term" style="margin-top:.5rem"><span class="p">$</span> uvicorn estudiantes_api:app --reload <span class="c"># ← ejecuta esto</span></div>
+</div>
+
+<!-- ════════ SLIDE 24: ACTIVIDAD PASO 2 ════════ -->
+<div class="slide top-align" data-meme="false">
+  <div class="act-header">
+    <span style="font-size:1.5rem">🏗️</span>
+    <h2>Paso 2 — GET y POST</h2>
+    <span class="act-badge">2 / 4</span>
+  </div>
+  <div style="position:relative;width:100%;max-width:820px">
+    <div class="cf">estudiantes_api.py — agregar al final</div>
+    <pre><code class="language-python">@app.get("/")
+def inicio():
+    return {"mensaje": "API de Estudiantes ✅", "total": len(db)}
+
+@app.get("/estudiantes", response_model=list[EstudianteConID])
+def listar(carrera: Optional[str] = None):
+    items = list(db.values())
+    if carrera:
+        items = [e for e in items if e.carrera.lower() == carrera.lower()]
+    return items
+
+@app.get("/estudiantes/{est_id}", response_model=EstudianteConID)
+def obtener(est_id: int):
+    if est_id not in db: raise HTTPException(404, "Estudiante no encontrado")
+    return db[est_id]
+
+@app.post("/estudiantes", response_model=EstudianteConID, status_code=201)
+def crear(est: Estudiante):
+    global id_c
+    id_c += 1
+    nuevo = EstudianteConID(id=id_c, **est.dict())
+    db[id_c] = nuevo
+    return nuevo</code></pre>
+  </div>
+  <p style="color:var(--muted);font-size:.85rem;margin-top:.5rem">Prueba en <code>localhost:8000/docs</code> — intenta GET y POST desde la interfaz.</p>
+</div>
+
+<!-- ════════ SLIDE 25: ACTIVIDAD PASO 3+4 ════════ -->
+<div class="slide top-align" data-meme="false">
+  <div class="act-header">
+    <span style="font-size:1.5rem">🏗️</span>
+    <h2>Paso 3 — DELETE + Bonus Streamlit</h2>
+    <span class="act-badge">3 / 4</span>
+  </div>
+  <div class="two-col" style="align-items:start">
+    <div>
+      <h3>DELETE endpoint</h3>
+      <div style="position:relative">
+        <div class="cf">estudiantes_api.py</div>
+        <pre><code class="language-python">@app.delete("/estudiantes/{est_id}")
+def eliminar(est_id: int):
+    if est_id not in db:
+        raise HTTPException(404, "No encontrado")
+    e = db.pop(est_id)
+    return {
+        "mensaje": f"'{e.nombre}' eliminado",
+        "id": est_id
+    }</code></pre>
+      </div>
+    </div>
+    <div>
+      <h3>Frontend Streamlit (bonus)</h3>
+      <div style="position:relative">
+        <div class="cf">frontend.py</div>
+        <pre><code class="language-python">import streamlit as st
+import requests
+
+API = "http://localhost:8000"
+st.title("🎓 Estudiantes")
+
+if st.button("Cargar"):
+    r = requests.get(f"{API}/estudiantes")
+    if r.status_code == 200:
+        for e in r.json():
+            st.write(
+                f"**{e['nombre']}** — "
+                f"{e['carrera']} "
+                f"S{e['semestre']}"
+            )</code></pre>
+      </div>
+      <div class="term" style="margin-top:.5rem;font-size:.78rem">
+        <span class="c"># Terminal 1</span><br/>
+        <span class="p">$</span> uvicorn estudiantes_api:app --reload<br/>
+        <span class="c"># Terminal 2</span><br/>
+        <span class="p">$</span> streamlit run frontend.py
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════ SLIDE 26: RESUMEN FINAL ════════ -->
+<div class="slide" data-meme="false">
+  <div class="slide-label">Recap</div>
+  <h2>Lo que aprendimos hoy</h2>
+  <div class="card-row" style="flex-wrap:wrap;max-width:820px;margin-bottom:1rem">
+    <div class="card" style="min-width:200px">
+      <h4>⚡ FastAPI</h4>
+      <ul style="font-size:.8rem">
+        <li>Framework moderno para APIs</li>
+        <li>Más rápido y moderno que Flask</li>
+        <li>Decoradores <code>@app.get()</code></li>
+        <li>Uvicorn como servidor</li>
+      </ul>
+    </div>
+    <div class="card" style="min-width:200px">
+      <h4>📍 Parámetros</h4>
+      <ul style="font-size:.8rem">
+        <li>Path: <code>/items/{id}</code></li>
+        <li>Query: <code>?filtro=valor</code></li>
+        <li>Body: JSON en POST/PUT</li>
+      </ul>
+    </div>
+    <div class="card" style="min-width:200px">
+      <h4>✅ Pydantic</h4>
+      <ul style="font-size:.8rem">
+        <li>Modelos tipados</li>
+        <li>Validación automática</li>
+        <li>422 si datos incorrectos</li>
+      </ul>
+    </div>
+    <div class="card" style="min-width:200px">
+      <h4>🔄 CRUD</h4>
+      <ul style="font-size:.8rem">
+        <li>GET → leer</li>
+        <li>POST → crear</li>
+        <li>PUT → actualizar</li>
+        <li>DELETE → eliminar</li>
+      </ul>
+    </div>
+  </div>
+  <div class="highlight-box" style="text-align:center">
+    <p style="font-size:1.05rem;font-weight:700">🛸 Módulo 6: consumimos la API de Rick and Morty</p>
+    <p style="font-size:1.05rem;font-weight:700;margin-top:.35rem">⚡ Módulo 7: construimos nuestra propia API</p>
+    <p style="font-size:.9rem;color:var(--muted);margin-top:.75rem">El ciclo cliente ↔ servidor está completo. Ya sabes los dos lados.</p>
+  </div>
+</div>
+
+</div><!-- end deck -->
+
+<div id="nav">
+  <button id="prev" onclick="navigate(-1)">← Anterior</button>
+  <span id="slide-info" style="font-size:.85rem;color:var(--muted)">1 / 26</span>
+  <button id="next" onclick="navigate(1)">Siguiente →</button>
+</div>
+
+<script>
+const slides = document.querySelectorAll('.slide');
+const total = slides.length;
+let cur = 0;
+function navigate(dir) {
+  const n = cur + dir;
+  if (n < 0 || n >= total) return;
+  slides[cur].classList.remove('active');
+  cur = n;
+  slides[cur].classList.add('active');
+  updateUI();
+  slides[cur].querySelectorAll('pre code').forEach(b => hljs.highlightElement(b));
+}
+function updateUI() {
+  document.getElementById('progress-fill').style.width = ((cur+1)/total*100) + '%';
+  document.getElementById('counter').textContent = (cur+1) + ' / ' + total;
+  document.getElementById('slide-info').textContent = (cur+1) + ' / ' + total;
+  document.getElementById('prev').disabled = cur === 0;
+  document.getElementById('next').disabled = cur === total - 1;
+  document.getElementById('meme-tag').style.display = slides[cur].dataset.meme === 'true' ? 'block' : 'none';
+}
+document.addEventListener('keydown', e => {
+  if (e.key === 'ArrowRight' || e.key === ' ') { e.preventDefault(); navigate(1); }
+  if (e.key === 'ArrowLeft') { e.preventDefault(); navigate(-1); }
+});
+slides[0].classList.add('active');
+document.getElementById('prev').disabled = true;
+updateUI();
+</script>
+</body>
+</html>

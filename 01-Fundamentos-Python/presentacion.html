@@ -1,0 +1,1586 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Fundamentos de Python</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --bg: #0d1117;
+      --surface: #161b22;
+      --surface2: #21262d;
+      --border: #30363d;
+      --text: #e6edf3;
+      --muted: #8b949e;
+      --blue: #4d9de0;
+      --gold: #b8a94a;
+      --green: #3fb950;
+      --orange: #f0883e;
+      --purple: #bc8cff;
+      --red: #f85149;
+      --accent: #4d9de0;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      height: 100vh;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* NAV BAR */
+    .nav {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 10px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-shrink: 0;
+    }
+    .nav-title { font-size: 13px; color: var(--muted); letter-spacing: 0.5px; }
+    .nav-controls { display: flex; align-items: center; gap: 12px; }
+    .nav-counter { font-size: 13px; color: var(--muted); min-width: 60px; text-align: center; }
+    .btn {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 6px 16px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 13px;
+      transition: all 0.15s;
+    }
+    .btn:hover { background: var(--border); }
+    .btn:disabled { opacity: 0.3; cursor: not-allowed; }
+
+    /* PROGRESS */
+    .progress-bar {
+      height: 3px;
+      background: var(--border);
+      flex-shrink: 0;
+    }
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--blue), var(--gold));
+      transition: width 0.3s ease;
+    }
+
+    /* SLIDES CONTAINER */
+    .slides-wrapper {
+      flex: 1;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .slide {
+      position: absolute;
+      inset: 0;
+      padding: 48px 64px;
+      display: none;
+      flex-direction: column;
+      justify-content: center;
+      overflow-y: auto;
+    }
+    .slide.active { display: flex; }
+
+    /* SLIDE TYPES */
+    .slide-title {
+      background: radial-gradient(ellipse at 30% 50%, #1a2744 0%, var(--bg) 70%);
+      text-align: center;
+      align-items: center;
+    }
+
+    .slide-section {
+      background: linear-gradient(135deg, #0d1117 0%, #161b22 100%);
+      align-items: center;
+      text-align: center;
+    }
+
+    /* TYPOGRAPHY */
+    h1 { font-size: 3.2rem; font-weight: 800; line-height: 1.1; }
+    h2 { font-size: 2rem; font-weight: 700; margin-bottom: 32px; }
+    h3 { font-size: 1.3rem; font-weight: 600; margin-bottom: 16px; }
+    p  { font-size: 1.05rem; line-height: 1.7; color: var(--muted); }
+
+    .title-sub {
+      font-size: 1.3rem;
+      color: var(--muted);
+      margin-top: 16px;
+      font-weight: 400;
+    }
+    .title-tag {
+      display: inline-block;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      color: var(--blue);
+      padding: 6px 16px;
+      border-radius: 20px;
+      font-size: 0.85rem;
+      margin-top: 24px;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+
+    .highlight { color: var(--blue); }
+    .gold { color: var(--gold); }
+    .green { color: var(--green); }
+    .orange { color: var(--orange); }
+    .purple { color: var(--purple); }
+    .red { color: var(--red); }
+
+    /* SECTION DIVIDER */
+    .section-number {
+      font-size: 5rem;
+      font-weight: 900;
+      color: var(--surface2);
+      line-height: 1;
+    }
+    .section-title {
+      font-size: 2.5rem;
+      font-weight: 800;
+      color: var(--text);
+    }
+    .section-desc {
+      font-size: 1rem;
+      color: var(--muted);
+      margin-top: 8px;
+    }
+
+    /* GRID LAYOUTS */
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+    .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; }
+    .grid-4 { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 16px; }
+
+    /* CARDS */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 24px;
+    }
+    .card-icon { font-size: 2rem; margin-bottom: 12px; }
+    .card h3 { font-size: 1rem; margin-bottom: 8px; }
+    .card p { font-size: 0.9rem; }
+
+    .card-accent-blue { border-left: 3px solid var(--blue); }
+    .card-accent-gold { border-left: 3px solid var(--gold); }
+    .card-accent-green { border-left: 3px solid var(--green); }
+    .card-accent-orange { border-left: 3px solid var(--orange); }
+    .card-accent-purple { border-left: 3px solid var(--purple); }
+
+    /* CODE */
+    pre {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 24px;
+      font-family: 'SF Mono', 'Fira Code', monospace;
+      font-size: 1rem;
+      line-height: 1.7;
+      overflow-x: auto;
+    }
+    .code-kw   { color: #ff7b72; }
+    .code-fn   { color: #d2a8ff; }
+    .code-str  { color: #a5d6ff; }
+    .code-num  { color: #79c0ff; }
+    .code-cmt  { color: #6e7681; font-style: italic; }
+    .code-var  { color: #ffa657; }
+
+    /* LISTS */
+    ul.clean { list-style: none; display: flex; flex-direction: column; gap: 12px; }
+    ul.clean li {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      font-size: 1rem;
+      line-height: 1.5;
+    }
+    ul.clean li::before {
+      content: '▸';
+      color: var(--blue);
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+
+    /* STAT BOXES */
+    .stat-box {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 28px;
+      text-align: center;
+    }
+    .stat-number { font-size: 2.8rem; font-weight: 900; line-height: 1; }
+    .stat-label  { font-size: 0.85rem; color: var(--muted); margin-top: 8px; }
+
+    /* QUOTE */
+    .quote {
+      border-left: 4px solid var(--gold);
+      padding: 20px 28px;
+      background: var(--surface);
+      border-radius: 0 12px 12px 0;
+      font-style: italic;
+      font-size: 1.1rem;
+      color: var(--text);
+    }
+
+    /* TIMELINE */
+    .timeline { display: flex; flex-direction: column; gap: 0; }
+    .timeline-item {
+      display: grid;
+      grid-template-columns: 80px 1fr;
+      gap: 20px;
+      padding-bottom: 20px;
+      position: relative;
+    }
+    .timeline-item:not(:last-child)::after {
+      content: '';
+      position: absolute;
+      left: 39px;
+      top: 28px;
+      bottom: 0;
+      width: 2px;
+      background: var(--border);
+    }
+    .timeline-year {
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: var(--blue);
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 4px 8px;
+      text-align: center;
+      height: fit-content;
+      position: relative;
+      z-index: 1;
+    }
+    .timeline-content h3 { font-size: 0.95rem; margin-bottom: 4px; }
+    .timeline-content p  { font-size: 0.85rem; }
+
+    /* TAGS */
+    .tag {
+      display: inline-block;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 4px 12px;
+      font-size: 0.8rem;
+      color: var(--muted);
+      margin: 4px;
+    }
+
+    /* COMPARISON TABLE */
+    table.compare {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.9rem;
+    }
+    table.compare th {
+      background: var(--surface2);
+      padding: 12px 16px;
+      text-align: left;
+      font-weight: 600;
+      border-bottom: 2px solid var(--border);
+    }
+    table.compare td {
+      padding: 10px 16px;
+      border-bottom: 1px solid var(--border);
+      color: var(--muted);
+    }
+    table.compare tr:last-child td { border-bottom: none; }
+    table.compare .yes { color: var(--green); font-weight: 600; }
+    table.compare .no  { color: var(--red); }
+    table.compare .mid { color: var(--orange); }
+
+    /* CALLOUT */
+    .callout {
+      background: #1a2744;
+      border: 1px solid #2d4a8a;
+      border-radius: 10px;
+      padding: 16px 20px;
+      font-size: 0.95rem;
+    }
+    .callout-warn {
+      background: #2a1f0d;
+      border-color: #6b4c1a;
+    }
+    .callout-green {
+      background: #0d2318;
+      border-color: #1a4d31;
+    }
+
+    /* LOGO PLACEHOLDER */
+    .python-logo {
+      font-size: 5rem;
+      margin-bottom: 16px;
+    }
+
+    /* SLIDE HEADER */
+    .slide-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 32px;
+    }
+    .slide-header-line {
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+    .slide-header h2 { margin-bottom: 0; font-size: 1.6rem; }
+
+    /* COMPANY LOGOS ROW */
+    .companies {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      align-items: center;
+    }
+    .company-tag {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 20px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    /* KEYBOARD HINT */
+    .key-hint {
+      position: fixed;
+      bottom: 16px;
+      right: 24px;
+      font-size: 11px;
+      color: var(--border);
+    }
+  </style>
+</head>
+<body>
+
+<!-- NAV -->
+<div class="nav">
+  <span class="nav-title">Python — Fundamentos</span>
+  <div class="nav-controls">
+    <button class="btn" id="prevBtn" onclick="changeSlide(-1)">← Anterior</button>
+    <span class="nav-counter" id="counter">1 / 30</span>
+    <button class="btn" id="nextBtn" onclick="changeSlide(1)">Siguiente →</button>
+  </div>
+</div>
+
+<!-- PROGRESS -->
+<div class="progress-bar">
+  <div class="progress-fill" id="progress"></div>
+</div>
+
+<!-- SLIDES -->
+<div class="slides-wrapper">
+
+  <!-- ═══════════════════════════════════════ -->
+  <!-- 1. PORTADA -->
+  <!-- ═══════════════════════════════════════ -->
+  <div class="slide slide-title active">
+    <div class="python-logo">🐍</div>
+    <h1>Introducción a <span class="highlight">Python</span></h1>
+    <p class="title-sub">El lenguaje de programación más popular del mundo</p>
+    <span class="title-tag">Módulo 1 — Fundamentos de Python</span>
+  </div>
+
+  <!-- ═══════════════════════════════════════ -->
+  <!-- 2. AGENDA -->
+  <!-- ═══════════════════════════════════════ -->
+  <div class="slide">
+    <div class="slide-header">
+      <h2>¿Qué veremos hoy?</h2>
+      <div class="slide-header-line"></div>
+    </div>
+    <div class="grid-2">
+      <div class="card card-accent-blue">
+        <div class="card-icon">📌</div>
+        <h3>Parte 1 — ¿Qué es Python?</h3>
+        <p>Historia, características y por qué importa conocerlo hoy.</p>
+      </div>
+      <div class="card card-accent-gold">
+        <div class="card-icon">🌐</div>
+        <h3>Parte 2 — ¿Para qué sirve?</h3>
+        <p>Casos de uso reales: web, datos, IA, automatización, ciencia.</p>
+      </div>
+      <div class="card card-accent-green">
+        <div class="card-icon">💼</div>
+        <h3>Parte 3 — El mercado laboral</h3>
+        <p>Salarios, demanda, empresas y por qué Python domina el sector.</p>
+      </div>
+      <div class="card card-accent-orange">
+        <div class="card-icon">💻</div>
+        <h3>Parte 4 — Primeros pasos</h3>
+        <p>Instalación, entornos de trabajo y tu primer programa.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════ -->
+  <!-- 3. SECTION: QUÉ ES PYTHON -->
+  <!-- ═══════════════════════════════════════ -->
+  <div class="slide slide-section">
+    <div class="section-number">01</div>
+    <div class="section-title">¿Qué es <span class="highlight">Python</span>?</div>
+    <div class="section-desc">Historia, filosofía y características del lenguaje</div>
+  </div>
+
+  <!-- ═══════════════════════════════════════ -->
+  <!-- 4. DEFINICIÓN -->
+  <!-- ═══════════════════════════════════════ -->
+  <div class="slide">
+    <div class="slide-header">
+      <h2>¿Qué es Python?</h2>
+      <div class="slide-header-line"></div>
+    </div>
+    <div style="display:flex; flex-direction:column; gap:24px;">
+      <div class="quote">
+        Python es un lenguaje de programación de <span class="highlight">alto nivel</span>, <span class="gold">interpretado</span> y de <span class="green">propósito general</span>, diseñado para que el código sea fácil de leer y escribir.
+      </div>
+      <div class="grid-3">
+        <div class="card card-accent-blue">
+          <h3 class="highlight">Alto nivel</h3>
+          <p>Escribe instrucciones cercanas al lenguaje humano, no al lenguaje de la máquina.</p>
+        </div>
+        <div class="card card-accent-gold">
+          <h3 class="gold">Interpretado</h3>
+          <p>No necesita compilarse. El código se ejecuta línea a línea en tiempo real.</p>
+        </div>
+        <div class="card card-accent-green">
+          <h3 class="green">Propósito general</h3>
+          <p>Sirve para web, datos, IA, scripts, ciencia, juegos y mucho más.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════ -->
+  <!-- 5. HISTORIA -->
+  <!-- ═══════════════════════════════════════ -->
+  <div class="slide">
+    <div class="slide-header">
+      <h2>Historia de Python</h2>
+      <div class="slide-header-line"></div>
+    </div>
+    <div class="timeline">
+      <div class="timeline-item">
+        <div class="timeline-year">1989</div>
+        <div class="timeline-content">
+          <h3>Guido van Rossum comienza a desarrollarlo</h3>
+          <p>Durante las vacaciones de Navidad en el Centrum Wiskunde & Informatica (CWI), Países Bajos. Lo llamó "Python" por el show de comedia <em>Monty Python's Flying Circus</em>.</p>
+        </div>
+      </div>
+      <div class="timeline-item">
+        <div class="timeline-year">1991</div>
+        <div class="timeline-content">
+          <h3>Python 0.9.0 — Primera versión pública</h3>
+          <p>Ya incluía clases, manejo de excepciones, funciones y módulos. Una base sólida desde el inicio.</p>
+        </div>
+      </div>
+      <div class="timeline-item">
+        <div class="timeline-year">2000</div>
+        <div class="timeline-content">
+          <h3>Python 2.0 — Comprensión de listas y recolector de basura</h3>
+          <p>Gran salto en productividad. Fue la versión dominante por más de una década.</p>
+        </div>
+      </div>
+      <div class="timeline-item">
+        <div class="timeline-year">2008</div>
+        <div class="timeline-content">
+          <h3>Python 3.0 — Rediseño total del lenguaje</h3>
+          <p>Incompatible con Python 2, pero más limpio y consistente. Hoy es el estándar.</p>
+        </div>
+      </div>
+      <div class="timeline-item">
+        <div class="timeline-year">Hoy</div>
+        <div class="timeline-content">
+          <h3 class="highlight">El lenguaje #1 del mundo</h3>
+          <p>Lidera rankings globales (TIOBE, Stack Overflow, IEEE). Más de 8 millones de desarrolladores activos.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════ -->
+  <!-- 6. FILOSOFÍA -->
+  <!-- ═══════════════════════════════════════ -->
+  <div class="slide">
+    <div class="slide-header">
+      <h2>El Zen de Python</h2>
+      <div class="slide-header-line"></div>
+    </div>
+    <p style="margin-bottom:24px;">Python tiene una filosofía de diseño escrita por Tim Peters. Se puede ver ejecutando <code style="color:var(--blue); background:var(--surface); padding:2px 8px; border-radius:4px;">import this</code> en cualquier terminal Python.</p>
+    <div class="grid-2">
+      <div style="display:flex; flex-direction:column; gap:12px;">
+        <div class="callout">✦ <strong>Lo bello es mejor que lo feo.</strong></div>
+        <div class="callout">✦ <strong>Lo explícito es mejor que lo implícito.</strong></div>
+        <div class="callout">✦ <strong>Lo simple es mejor que lo complejo.</strong></div>
+        <div class="callout">✦ <strong>La legibilidad importa.</strong></div>
+      </div>
+      <div style="display:flex; flex-direction:column; gap:12px;">
+        <div class="callout">✦ <strong>Los errores nunca deben pasar en silencio.</strong></div>
+        <div class="callout">✦ <strong>Debe haber una — y preferiblemente solo una — manera obvia de hacerlo.</strong></div>
+        <div class="callout">✦ <strong>Si es difícil de explicar, es una mala idea.</strong></div>
+        <div class="callout">✦ <strong>Si es fácil de explicar, puede ser una buena idea.</strong></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════ -->
+  <!-- 7. CARACTERÍSTICAS CLAVE -->
+  <!-- ═══════════════════════════════════════ -->
+  <div class="slide">
+    <div class="slide-header">
+      <h2>Características de Python</h2>
+      <div class="slide-header-line"></div>
+    </div>
+    <div class="grid-2">
+      <ul class="clean">
+        <li><strong class="highlight">Sintaxis limpia:</strong> El código se lee casi como pseudocódigo en inglés. Menos líneas para hacer lo mismo.</li>
+        <li><strong class="gold">Tipado dinámico:</strong> No declaras el tipo de una variable. Python lo detecta automáticamente.</li>
+        <li><strong class="green">Multiparadigma:</strong> Soporta programación orientada a objetos, funcional y procedural.</li>
+        <li><strong class="orange">Multiplataforma:</strong> El mismo código corre en Windows, macOS y Linux sin cambios.</li>
+      </ul>
+      <ul class="clean">
+        <li><strong class="purple">Baterías incluidas:</strong> Viene con una librería estándar enorme. No necesitas instalar nada para hacer cosas básicas.</li>
+        <li><strong class="highlight">Ecosistema gigante:</strong> Más de 500,000 paquetes en PyPI (pip) para cualquier necesidad.</li>
+        <li><strong class="gold">Gran comunidad:</strong> Documentación excelente, foros activos, respuesta rápida a problemas.</li>
+        <li><strong class="green">Open source:</strong> Gratis, siempre. Nadie te cobra por usarlo en producción.</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════ -->
+  <!-- 8. PYTHON VS OTROS — SINTAXIS -->
+  <!-- ═══════════════════════════════════════ -->
+  <div class="slide">
+    <div class="slide-header">
+      <h2>Python vs otros lenguajes — Legibilidad</h2>
+      <div class="slide-header-line"></div>
+    </div>
+    <p style="margin-bottom:20px;">El mismo programa "Hola Mundo" en distintos lenguajes:</p>
+    <div class="grid-2">
+      <div>
+        <p style="margin-bottom:8px; font-size:0.85rem; color:var(--muted);">Java</p>
+        <pre style="font-size:0.82rem;"><span class="code-kw">public class</span> <span class="code-fn">Main</span> {
+  <span class="code-kw">public static void</span> <span class="code-fn">main</span>(String[] args) {
+    System.out.<span class="code-fn">println</span>(<span class="code-str">"Hola Mundo"</span>);
+  }
+}</pre>
+        <p style="margin-bottom:8px; margin-top:16px; font-size:0.85rem; color:var(--muted);">C++</p>
+        <pre style="font-size:0.82rem;"><span class="code-kw">#include</span> <span class="code-str">&lt;iostream&gt;</span>
+<span class="code-kw">using namespace</span> std;
+<span class="code-kw">int</span> <span class="code-fn">main</span>() {
+  cout &lt;&lt; <span class="code-str">"Hola Mundo"</span> &lt;&lt; endl;
+  <span class="code-kw">return</span> <span class="code-num">0</span>;
+}</pre>
+      </div>
+      <div>
+        <p style="margin-bottom:8px; font-size:0.85rem; color:var(--muted);">Python ✦</p>
+        <pre style="font-size:1rem;"><span class="code-fn">print</span>(<span class="code-str">"Hola Mundo"</span>)</pre>
+        <div class="callout-green callout" style="margin-top:20px;">
+          <strong class="green">Una sola línea.</strong> Sin imports, sin clases, sin llaves, sin punto y coma. Python elimina el ruido sintáctico para que te concentres en resolver el problema.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════ -->
+  <!-- 9. SECTION: PARA QUÉ SIRVE -->
+  <!-- ═══════════════════════════════════════ -->
+  <div class="slide slide-section">
+    <div class="section-number">02</div>
+    <div class="section-title">¿Para qué <span class="gold">sirve</span>?</div>
+    <div class="section-desc">Casos de uso reales en la industria</div>
+  </div>
+
+  <!-- ═══════════════════════════════════════ -->
+  <!-- 10. DESARROLLO WEB -->
+  <!-- ═══════════════════════════════════════ -->
+  <div class="slide">
+    <div class="slide-header">
+      <h2>🌐 Desarrollo Web</h2>
+      <div class="slide-header-line"></div>
+    </div>
+    <div class="grid-2">
+      <div style="display:flex; flex-direction:column; gap:16px;">
+        <p>Python potencia algunos de los sitios web más grandes del mundo. Con frameworks como <span class="highlight">Django</span> y <span class="gold">FastAPI</span> puedes construir desde una API simple hasta plataformas de millones de usuarios.</p>
+        <div class="card card-accent-blue">
+          <h3>Django</h3>
+          <p>Framework completo. Incluye base de datos, autenticación, panel admin. Ideal para aplicaciones grandes.</p>
+        </div>
+        <div class="card card-accent-gold">
+          <h3>FastAPI</h3>
+          <p>Framework moderno y rápido para APIs. Validación automática, documentación generada sola, alto rendimiento.</p>
+        </div>
+        <div class="card">
+          <h3>Flask</h3>
+          <p>Minimalista y flexible. Perfecto para APIs pequeñas o cuando quieres control total.</p>
+        </div>
+      </div>
+      <div style="display:flex; flex-direction:column; gap:16px;">
+        <p style="font-size:0.9rem; color:var(--muted);">Empresas que usan Python para su backend:</p>
+        <div class="companies">
+          <span class="company-tag">Instagram</span>
+          <span class="company-tag">Pinterest</span>
+          <span class="company-tag">Spotify</span>
+          <span class="company-tag">Reddit</span>
+          <span class="company-tag">Dropbox</span>
+          <span class="company-tag">Disqus</span>
+          <span class="company-tag">Eventbrite</span>
+          <span class="company-tag">Mozilla</span>
+        </div>
+        <div class="callout">
+          <strong>¿Sabías que?</strong> Instagram, con más de 2 mil millones de usuarios activos, corre principalmente en Django (Python).
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════ -->
+  <!-- 11. DATA SCIENCE & IA -->
+  <!-- ═══════════════════════════════════════ -->
+  <div class="slide">
+    <div class="slide-header">
+      <h2>🤖 Ciencia de Datos e Inteligencia Artificial</h2>
+      <div class="slide-header-line"></div>
+    </div>
+    <div class="grid-2">
+      <div style="display:flex; flex-direction:column; gap:14px;">
+        <p>Python es <strong class="highlight">el estándar de facto</strong> en Data Science, Machine Learning e IA. Investigadores y empresas lo usan porque tiene el ecosistema más completo para trabajar con datos.</p>
+        <div class="grid-2" style="gap:12px;">
+          <div class="card card-accent-blue" style="padding:16px;">
+            <h3 style="font-size:0.9rem;">NumPy</h3>
+            <p>Computación numérica y matrices.</p>
+          </div>
+          <div class="card card-accent-gold" style="padding:16px;">
+            <h3 style="font-size:0.9rem;">Pandas</h3>
+            <p>Análisis y manipulación de datos.</p>
+          </div>
+          <div class="card card-accent-green" style="padding:16px;">
+            <h3 style="font-size:0.9rem;">TensorFlow</h3>
+            <p>Deep Learning (Google).</p>
+          </div>
+          <div class="card card-accent-orange" style="padding:16px;">
+            <h3 style="font-size:0.9rem;">PyTorch</h3>
+            <p>Deep Learning (Meta/Facebook).</p>
+          </div>
+          <div class="card card-accent-purple" style="padding:16px;">
+            <h3 style="font-size:0.9rem;">scikit-learn</h3>
+            <p>Machine Learning clásico.</p>
+          </div>
+          <div class="card" style="padding:16px;">
+            <h3 style="font-size:0.9rem;">Matplotlib</h3>
+            <p>Visualización de datos.</p>
+          </div>
+        </div>
+      </div>
+      <div style="display:flex; flex-direction:column; gap:14px;">
+        <div class="callout">
+          <strong class="highlight">ChatGPT, GPT-4, LLaMA, Stable Diffusion</strong> — todos entrenados y desarrollados con Python.
+        </div>
+        <div class="callout-green callout">
+          <strong class="green">NASA, CERN, SpaceX</strong> usan Python para análisis científico, simulaciones y procesamiento de datos de misiones espaciales.
+        </div>
+        <p style="font-size:0.9rem; margin-top:8px;">El campo de <strong class="gold">Data Science</strong> tiene Python como requisito casi universal en ofertas laborales. No saber Python es una desventaja competitiva seria en este campo.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════ -->
+  <!-- 12. AUTOMATIZACIÓN -->
+  <!-- ═══════════════════════════════════════ -->
+  <div class="slide">
+    <div class="slide-header">
+      <h2>⚙️ Automatización y Scripting</h2>
+      <div class="slide-header-line"></div>
+    </div>
+    <div class="grid-2">
+      <div style="display:flex; flex-direction:column; gap:16px;">
+        <p>Una de las razones por las que Python se popularizó tanto: permite <strong class="highlight">automatizar tareas repetitivas</strong> con muy poco código.</p>
+        <ul class="clean">
+          <li>Renombrar 1,000 archivos en segundos</li>
+          <li>Leer y procesar archivos Excel o CSV masivos</li>
+          <li>Enviar correos electrónicos automáticos</li>
+          <li>Hacer web scraping (extraer datos de sitios web)</li>
+          <li>Controlar el sistema operativo y archivos</li>
+          <li>Generar reportes PDF automáticos</li>
+          <li>Interactuar con APIs de servicios externos</li>
+        </ul>
+      </div>
+      <div>
+        <p style="margin-bottom:12px; font-size:0.85rem; color:var(--muted);">Ejemplo: Renombrar 1,000 archivos</p>
+        <pre><span class="code-kw">import</span> os
+
+carpeta = <span class="code-str">"mis_archivos"</span>
+archivos = os.<span class="code-fn">listdir</span>(carpeta)
+
+<span class="code-kw">for</span> <span class="code-var">i</span>, <span class="code-var">archivo</span> <span class="code-kw">in</span> <span class="code-fn">enumerate</span>(archivos):
+    nuevo_nombre = <span class="code-str">f"archivo_<span class="code-var">{i+1}</span>.txt"</span>
+    os.<span class="code-fn">rename</span>(archivo, nuevo_nombre)
+
+<span class="code-fn">print</span>(<span class="code-str">"¡Listo! Archivos renombrados."</span>)</pre>
+        <div class="callout" style="margin-top:16px;">
+          Lo que tomaría horas haciendo manualmente, Python lo hace en milisegundos.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════ -->
+  <!-- 13. OTROS USOS -->
+  <!-- ═══════════════════════════════════════ -->
+  <div class="slide">
+    <div class="slide-header">
+      <h2>Más áreas donde Python domina</h2>
+      <div class="slide-header-line"></div>
+    </div>
+    <div class="grid-4">
+      <div class="card card-accent-blue">
+        <div class="card-icon">🔒</div>
+        <h3>Ciberseguridad</h3>
+        <p>Pentesting, análisis de vulnerabilidades, herramientas forenses. Kali Linux lo incluye por defecto.</p>
+      </div>
+      <div class="card card-accent-gold">
+        <div class="card-icon">🎮</div>
+        <h3>Videojuegos</h3>
+        <p>Pygame para juegos 2D. Blender usa Python como lenguaje de scripting para animación 3D.</p>
+      </div>
+      <div class="card card-accent-green">
+        <div class="card-icon">🔬</div>
+        <h3>Ciencia</h3>
+        <p>Física, bioinformática, astronomía, química computacional. SciPy, AstroPy, BioPython.</p>
+      </div>
+      <div class="card card-accent-orange">
+        <div class="card-icon">🤖</div>
+        <h3>Robótica e IoT</h3>
+        <p>Raspberry Pi usa Python como lenguaje oficial. Control de hardware, sensores y dispositivos.</p>
+      </div>
+      <div class="card card-accent-purple">
+        <div class="card-icon">💹</div>
+        <h3>Finanzas</h3>
+        <p>Trading algorítmico, análisis cuantitativo, modelos de riesgo. JPMorgan, Goldman Sachs.</p>
+      </div>
+      <div class="card">
+        <div class="card-icon">☁️</div>
+        <h3>Cloud / DevOps</h3>
+        <p>AWS, Google Cloud y Azure tienen SDKs en Python. Ansible, Terraform y muchas herramientas DevOps.</p>
+      </div>
+      <div class="card card-accent-blue">
+        <div class="card-icon">🎓</div>
+        <h3>Educación</h3>
+        <p>El lenguaje más enseñado en universidades del mundo. MIT, Harvard, Stanford lo usan en sus cursos intro.</p>
+      </div>
+      <div class="card card-accent-gold">
+        <div class="card-icon">📊</div>
+        <h3>Business Intelligence</h3>
+        <p>Reportes, dashboards, análisis de KPIs. Integración con Power BI, Tableau y herramientas de BI.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════ -->
+  <!-- 14. SECTION: MERCADO LABORAL -->
+  <!-- ═══════════════════════════════════════ -->
+  <div class="slide slide-section">
+    <div class="section-number">03</div>
+    <div class="section-title">El <span class="green">mercado laboral</span></div>
+    <div class="section-desc">Demanda, salarios y oportunidades con Python</div>
+  </div>
+
+  <!-- ═══════════════════════════════════════ -->
+  <!-- 15. RANKING -->
+  <!-- ═══════════════════════════════════════ -->
+  <div class="slide">
+    <div class="slide-header">
+      <h2>Python en los rankings globales</h2>
+      <div class="slide-header-line"></div>
+    </div>
+    <div class="grid-2">
+      <div style="display:flex; flex-direction:column; gap:16px;">
+        <div class="card card-accent-blue">
+          <h3>TIOBE Index — 2024/2025</h3>
+          <p>Python ocupa el <strong class="highlight">#1</strong> por tercer año consecutivo, superando a Java y C++ por primera vez en la historia del índice.</p>
+        </div>
+        <div class="card card-accent-gold">
+          <h3>Stack Overflow Developer Survey</h3>
+          <p>Python es el lenguaje <strong class="gold">más querido y más usado</strong> según encuesta de 90,000 desarrolladores en 2024.</p>
+        </div>
+        <div class="card card-accent-green">
+          <h3>GitHub Octoverse</h3>
+          <p>Python superó a JavaScript como el lenguaje con <strong class="green">más repositorios activos</strong> en GitHub en 2024.</p>
+        </div>
+      </div>
+      <div style="display:flex; flex-direction:column; gap:16px;">
+        <p style="font-size:0.9rem; color:var(--muted);">Top 5 lenguajes más usados — 2025:</p>
+        <div style="display:flex; flex-direction:column; gap:8px;">
+          <div style="display:flex; align-items:center; gap:12px;">
+            <span style="color:var(--gold); font-weight:900; width:24px;">1</span>
+            <div style="flex:1; background:var(--surface); border-radius:6px; overflow:hidden;">
+              <div style="background:linear-gradient(90deg,var(--blue),var(--gold)); height:28px; width:100%; display:flex; align-items:center; padding-left:12px; font-size:0.85rem; font-weight:700;">Python — 28.4%</div>
+            </div>
+          </div>
+          <div style="display:flex; align-items:center; gap:12px;">
+            <span style="color:var(--muted); font-weight:700; width:24px;">2</span>
+            <div style="flex:1; background:var(--surface); border-radius:6px; overflow:hidden;">
+              <div style="background:var(--surface2); height:28px; width:78%; display:flex; align-items:center; padding-left:12px; font-size:0.85rem;">C — 20.1%</div>
+            </div>
+          </div>
+          <div style="display:flex; align-items:center; gap:12px;">
+            <span style="color:var(--muted); font-weight:700; width:24px;">3</span>
+            <div style="flex:1; background:var(--surface); border-radius:6px; overflow:hidden;">
+              <div style="background:var(--surface2); height:28px; width:70%; display:flex; align-items:center; padding-left:12px; font-size:0.85rem;">Java — 17.9%</div>
+            </div>
+          </div>
+          <div style="display:flex; align-items:center; gap:12px;">
+            <span style="color:var(--muted); font-weight:700; width:24px;">4</span>
+            <div style="flex:1; background:var(--surface); border-radius:6px; overflow:hidden;">
+              <div style="background:var(--surface2); height:28px; width:57%; display:flex; align-items:center; padding-left:12px; font-size:0.85rem;">C++ — 14.1%</div>
+            </div>
+          </div>
+          <div style="display:flex; align-items:center; gap:12px;">
+            <span style="color:var(--muted); font-weight:700; width:24px;">5</span>
+            <div style="flex:1; background:var(--surface); border-radius:6px; overflow:hidden;">
+              <div style="background:var(--surface2); height:28px; width:44%; display:flex; align-items:center; padding-left:12px; font-size:0.85rem;">JavaScript — 10.8%</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════ -->
+  <!-- 16. DEMANDA LABORAL -->
+  <!-- ═══════════════════════════════════════ -->
+  <div class="slide">
+    <div class="slide-header">
+      <h2>Demanda laboral con Python</h2>
+      <div class="slide-header-line"></div>
+    </div>
+    <div class="grid-4" style="margin-bottom:24px;">
+      <div class="stat-box">
+        <div class="stat-number highlight">+150%</div>
+        <div class="stat-label">Crecimiento en ofertas de trabajo con Python (últimos 5 años)</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-number gold">8M+</div>
+        <div class="stat-label">Desarrolladores Python activos en el mundo</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-number green">500K+</div>
+        <div class="stat-label">Paquetes disponibles en PyPI</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-number orange">#1</div>
+        <div class="stat-label">Lenguaje más pedido en ofertas de Data Science e IA</div>
+      </div>
+    </div>
+    <div class="callout-green callout">
+      <strong class="green">Dato clave:</strong> Según LinkedIn, las palabras "Python" y "Machine Learning" aparecen juntas en más del <strong>70% de las ofertas de Data Science</strong> en Latinoamérica. Python no es opcional en esa área — es requisito.
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════ -->
+  <!-- 17. SALARIOS -->
+  <!-- ═══════════════════════════════════════ -->
+  <div class="slide">
+    <div class="slide-header">
+      <h2>Salarios — Desarrolladores Python</h2>
+      <div class="slide-header-line"></div>
+    </div>
+    <div class="grid-2">
+      <div style="display:flex; flex-direction:column; gap:14px;">
+        <p style="font-size:0.9rem; color:var(--muted);">Rango salarial anual — Estados Unidos (USD)</p>
+        <div class="card card-accent-blue">
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <span>Python Developer (Junior)</span>
+            <span class="highlight" style="font-weight:700;">$70K – $95K</span>
+          </div>
+        </div>
+        <div class="card card-accent-gold">
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <span>Python Developer (Senior)</span>
+            <span class="gold" style="font-weight:700;">$120K – $160K</span>
+          </div>
+        </div>
+        <div class="card card-accent-green">
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <span>Data Scientist con Python</span>
+            <span class="green" style="font-weight:700;">$110K – $150K</span>
+          </div>
+        </div>
+        <div class="card card-accent-orange">
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <span>ML Engineer</span>
+            <span class="orange" style="font-weight:700;">$130K – $200K+</span>
+          </div>
+        </div>
+      </div>
+      <div style="display:flex; flex-direction:column; gap:14px;">
+        <p style="font-size:0.9rem; color:var(--muted);">En modo remoto (trabajo para empresas extranjeras desde LATAM)</p>
+        <div class="callout">
+          <strong>Trabajo remoto + Python</strong> es una de las combinaciones más comunes para desarrolladores latinoamericanos que buscan salarios en dólares trabajando desde sus países.
+        </div>
+        <div class="card card-accent-purple">
+          <h3>Plataformas para encontrar trabajo remoto</h3>
+          <div style="margin-top:8px;">
+            <span class="tag">Toptal</span>
+            <span class="tag">Deel</span>
+            <span class="tag">Remote.com</span>
+            <span class="tag">LinkedIn</span>
+            <span class="tag">Upwork</span>
+            <span class="tag">Turing</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════ -->
+  <!-- 18. EMPRESAS QUE USAN PYTHON -->
+  <!-- ═══════════════════════════════════════ -->
+  <div class="slide">
+    <div class="slide-header">
+      <h2>¿Quién usa Python?</h2>
+      <div class="slide-header-line"></div>
+    </div>
+    <p style="margin-bottom:24px; text-align:center;">Empresas de todos los sectores y tamaños dependen de Python en producción:</p>
+    <div class="grid-4" style="gap:14px;">
+      <div class="card" style="text-align:center; padding:20px 12px;">
+        <div style="font-size:1.8rem; margin-bottom:8px;">🔍</div>
+        <h3>Google</h3>
+        <p>Python fue uno de los 3 lenguajes oficiales desde su fundación. La mayoría de sus herramientas internas.</p>
+      </div>
+      <div class="card" style="text-align:center; padding:20px 12px;">
+        <div style="font-size:1.8rem; margin-bottom:8px;">🎬</div>
+        <h3>Netflix</h3>
+        <p>Python en toda su infraestructura de datos, recomendaciones y operaciones en la nube.</p>
+      </div>
+      <div class="card" style="text-align:center; padding:20px 12px;">
+        <div style="font-size:1.8rem; margin-bottom:8px;">📸</div>
+        <h3>Instagram</h3>
+        <p>El backend completo corre en Django. Más de 2,000 millones de usuarios.</p>
+      </div>
+      <div class="card" style="text-align:center; padding:20px 12px;">
+        <div style="font-size:1.8rem; margin-bottom:8px;">🚀</div>
+        <h3>NASA / SpaceX</h3>
+        <p>Análisis de datos de misiones, simulaciones, control de sistemas.</p>
+      </div>
+      <div class="card" style="text-align:center; padding:20px 12px;">
+        <div style="font-size:1.8rem; margin-bottom:8px;">🤖</div>
+        <h3>OpenAI</h3>
+        <p>ChatGPT, GPT-4, DALL-E — todo el desarrollo de modelos en Python.</p>
+      </div>
+      <div class="card" style="text-align:center; padding:20px 12px;">
+        <div style="font-size:1.8rem; margin-bottom:8px;">🎵</div>
+        <h3>Spotify</h3>
+        <p>Análisis de datos, recomendaciones musicales y pipelines de datos.</p>
+      </div>
+      <div class="card" style="text-align:center; padding:20px 12px;">
+        <div style="font-size:1.8rem; margin-bottom:8px;">🏦</div>
+        <h3>J.P. Morgan</h3>
+        <p>Modelos financieros, trading algorítmico y análisis de riesgo.</p>
+      </div>
+      <div class="card" style="text-align:center; padding:20px 12px;">
+        <div style="font-size:1.8rem; margin-bottom:8px;">☁️</div>
+        <h3>Amazon / AWS</h3>
+        <p>Infraestructura cloud, Lambda functions, herramientas internas.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════ -->
+  <!-- 19. SECTION: PRIMEROS PASOS -->
+  <!-- ═══════════════════════════════════════ -->
+  <div class="slide slide-section">
+    <div class="section-number">04</div>
+    <div class="section-title">Primeros <span class="orange">pasos</span></div>
+    <div class="section-desc">Instalación, entorno de trabajo y tu primer programa</div>
+  </div>
+
+  <!-- ═══════════════════════════════════════ -->
+  <!-- 20. CÓMO FUNCIONA PYTHON -->
+  <!-- ═══════════════════════════════════════ -->
+  <div class="slide">
+    <div class="slide-header">
+      <h2>¿Cómo funciona Python?</h2>
+      <div class="slide-header-line"></div>
+    </div>
+    <div class="grid-2" style="align-items:center;">
+      <div style="display:flex; flex-direction:column; gap:16px;">
+        <p>Python es un lenguaje <strong class="highlight">interpretado</strong>. Esto significa que hay un programa llamado <strong>intérprete</strong> que lee tu código y lo ejecuta directamente.</p>
+        <div style="display:flex; flex-direction:column; gap:10px;">
+          <div class="card" style="display:flex; align-items:center; gap:16px; padding:16px;">
+            <div style="font-size:1.5rem;">📝</div>
+            <div><h3 style="margin-bottom:0;">1. Escribes código</h3><p>Archivo .py en tu editor</p></div>
+          </div>
+          <div style="text-align:center; color:var(--muted);">↓</div>
+          <div class="card" style="display:flex; align-items:center; gap:16px; padding:16px;">
+            <div style="font-size:1.5rem;">🐍</div>
+            <div><h3 style="margin-bottom:0;">2. El intérprete lo lee</h3><p>Python.exe / python3 procesa cada línea</p></div>
+          </div>
+          <div style="text-align:center; color:var(--muted);">↓</div>
+          <div class="card card-accent-green" style="display:flex; align-items:center; gap:16px; padding:16px;">
+            <div style="font-size:1.5rem;">✅</div>
+            <div><h3 style="margin-bottom:0;">3. Resultado en pantalla</h3><p>Ves el output inmediatamente</p></div>
+          </div>
+        </div>
+      </div>
+      <div style="display:flex; flex-direction:column; gap:16px;">
+        <p style="font-size:0.9rem; color:var(--muted);">Diferencia con lenguajes compilados:</p>
+        <table class="compare">
+          <tr>
+            <th>Aspecto</th>
+            <th>Python (Interpretado)</th>
+            <th>C++ (Compilado)</th>
+          </tr>
+          <tr>
+            <td>Ejecución</td>
+            <td class="yes">Directo</td>
+            <td class="mid">Compilar primero</td>
+          </tr>
+          <tr>
+            <td>Velocidad de desarrollo</td>
+            <td class="yes">Muy rápida</td>
+            <td class="no">Lenta</td>
+          </tr>
+          <tr>
+            <td>Rendimiento en ejecución</td>
+            <td class="mid">Bueno</td>
+            <td class="yes">Excelente</td>
+          </tr>
+          <tr>
+            <td>Facilidad de aprendizaje</td>
+            <td class="yes">Alta</td>
+            <td class="no">Baja</td>
+          </tr>
+          <tr>
+            <td>Portabilidad</td>
+            <td class="yes">Total</td>
+            <td class="mid">Requiere recompilar</td>
+          </tr>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════ -->
+  <!-- 21. INSTALACIÓN -->
+  <!-- ═══════════════════════════════════════ -->
+  <div class="slide">
+    <div class="slide-header">
+      <h2>Instalación de Python</h2>
+      <div class="slide-header-line"></div>
+    </div>
+    <div class="grid-2">
+      <div style="display:flex; flex-direction:column; gap:16px;">
+        <div class="card card-accent-blue">
+          <h3>🪟 Windows</h3>
+          <ol style="padding-left:20px; color:var(--muted); font-size:0.9rem; line-height:2;">
+            <li>Ir a <span class="highlight">python.org</span></li>
+            <li>Descargar la versión más reciente</li>
+            <li><strong class="highlight">Marcar "Add Python to PATH"</strong> (muy importante)</li>
+            <li>Instalar → Verificar con <code>python --version</code></li>
+          </ol>
+        </div>
+        <div class="card card-accent-gold">
+          <h3>🍎 macOS</h3>
+          <ol style="padding-left:20px; color:var(--muted); font-size:0.9rem; line-height:2;">
+            <li>Opción 1: <span class="gold">python.org</span> (mismo proceso)</li>
+            <li>Opción 2 (recomendada): <code>brew install python3</code></li>
+            <li>Verificar: <code>python3 --version</code></li>
+          </ol>
+        </div>
+        <div class="card card-accent-green">
+          <h3>🐧 Linux</h3>
+          <p style="font-size:0.9rem;">Python 3 suele venir preinstalado. Verificar con <code>python3 --version</code>. Si no: <code>sudo apt install python3</code></p>
+        </div>
+      </div>
+      <div style="display:flex; flex-direction:column; gap:16px;">
+        <p style="font-size:0.85rem; color:var(--muted);">Verificar instalación en la terminal:</p>
+        <pre>$ python --version
+Python 3.12.0
+
+$ python
+Python 3.12.0 (main, Oct 2 2023)
+>>> <span class="code-fn">print</span>(<span class="code-str">"Hola"</span>)
+Hola
+>>> </pre>
+        <div class="callout-warn callout">
+          <strong>⚠️ Windows:</strong> Si el comando <code>python</code> no funciona, cierra y abre de nuevo la terminal después de instalar. El PATH necesita recargarse.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════ -->
+  <!-- 22. EDITORES E IDEs -->
+  <!-- ═══════════════════════════════════════ -->
+  <div class="slide">
+    <div class="slide-header">
+      <h2>¿Dónde escribir código Python?</h2>
+      <div class="slide-header-line"></div>
+    </div>
+    <div class="grid-3">
+      <div class="card card-accent-blue" style="position:relative;">
+        <div style="position:absolute; top:12px; right:12px; background:var(--blue); color:white; font-size:0.7rem; padding:2px 8px; border-radius:10px;">RECOMENDADO</div>
+        <div class="card-icon">💻</div>
+        <h3 class="highlight">Visual Studio Code</h3>
+        <p>Editor gratuito de Microsoft. Ligero, extensible, con extensión oficial de Python que incluye autocompletado, depuración y terminal integrada.</p>
+        <div style="margin-top:12px;">
+          <span class="tag">Gratis</span>
+          <span class="tag">Multiplataforma</span>
+          <span class="tag">Muy popular</span>
+        </div>
+      </div>
+      <div class="card card-accent-gold">
+        <div class="card-icon">🧠</div>
+        <h3 class="gold">PyCharm</h3>
+        <p>IDE profesional dedicado exclusivamente a Python. Muy potente para proyectos grandes. La versión Community es gratuita.</p>
+        <div style="margin-top:12px;">
+          <span class="tag">Versión gratuita</span>
+          <span class="tag">IDE completo</span>
+          <span class="tag">Para proyectos grandes</span>
+        </div>
+      </div>
+      <div class="card card-accent-green">
+        <div class="card-icon">📓</div>
+        <h3 class="green">Jupyter Notebook</h3>
+        <p>Perfecto para Data Science. Mezcla código, texto y gráficas en el mismo documento. Usado en universidades y por científicos.</p>
+        <div style="margin-top:12px;">
+          <span class="tag">Data Science</span>
+          <span class="tag">Interactivo</span>
+          <span class="tag">Visual</span>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-icon">🌐</div>
+        <h3>Google Colab</h3>
+        <p>Jupyter en la nube, gratis. Sin instalar nada. Perfecto para aprender o trabajar desde cualquier dispositivo.</p>
+      </div>
+      <div class="card">
+        <div class="card-icon">⚡</div>
+        <h3>Thonny</h3>
+        <p>IDE diseñado específicamente para principiantes. Simple, visual, muestra el paso a paso de ejecución.</p>
+      </div>
+      <div class="card">
+        <div class="card-icon">🔧</div>
+        <h3>IDLE</h3>
+        <p>Viene incluido con Python. Básico pero funcional. Suficiente para empezar sin instalar nada extra.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════ -->
+  <!-- 23. PRIMER PROGRAMA -->
+  <!-- ═══════════════════════════════════════ -->
+  <div class="slide">
+    <div class="slide-header">
+      <h2>Tu primer programa en Python</h2>
+      <div class="slide-header-line"></div>
+    </div>
+    <div class="grid-2">
+      <div style="display:flex; flex-direction:column; gap:16px;">
+        <p>Por convención, el primer programa en cualquier lenguaje imprime "Hello, World!". En Python:</p>
+        <pre><span class="code-fn">print</span>(<span class="code-str">"Hello, World!"</span>)</pre>
+        <p>Un programa más interactivo:</p>
+        <pre><span class="code-cmt"># Pedimos el nombre al usuario</span>
+<span class="code-var">nombre</span> = <span class="code-fn">input</span>(<span class="code-str">"¿Cómo te llamas? "</span>)
+
+<span class="code-cmt"># Saludamos con su nombre</span>
+<span class="code-fn">print</span>(<span class="code-str">f"¡Hola, <span class="code-var">{nombre}</span>! Bienvenido a Python 🐍"</span>)
+
+<span class="code-cmt"># Mostramos información básica</span>
+<span class="code-var">edad</span> = <span class="code-fn">int</span>(<span class="code-fn">input</span>(<span class="code-str">"¿Cuántos años tienes? "</span>))
+<span class="code-fn">print</span>(<span class="code-str">f"En 10 años tendrás <span class="code-var">{edad + 10}</span> años."</span>)</pre>
+      </div>
+      <div style="display:flex; flex-direction:column; gap:16px;">
+        <p style="font-size:0.9rem; color:var(--muted);">Lo que aprendemos con este programa:</p>
+        <ul class="clean">
+          <li><code style="color:var(--blue);">print()</code> — muestra texto en pantalla</li>
+          <li><code style="color:var(--blue);">input()</code> — lee texto que escribe el usuario</li>
+          <li><code style="color:var(--blue);">int()</code> — convierte texto a número entero</li>
+          <li><code style="color:var(--blue);">f"..."</code> — f-string: inserta variables dentro de texto</li>
+          <li><code style="color:var(--blue);">#</code> — comentario: Python lo ignora al ejecutar</li>
+          <li>Variables se crean solo asignando: <code style="color:var(--orange);">nombre = "valor"</code></li>
+        </ul>
+        <div class="callout-green callout">
+          <strong class="green">Sin punto y coma. Sin llaves. Sin tipos.</strong> Python elimina todo lo que no agrega valor al código.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════ -->
+  <!-- 24. MEME -->
+  <!-- ═══════════════════════════════════════ -->
+  <div class="slide slide-title">
+    <img src="imagenes/primer-programa-meme.png"
+         alt="meme"
+         style="max-height:85vh; max-width:90vw; object-fit:contain; border-radius:12px;" />
+  </div>
+
+  <!-- ═══════════════════════════════════════ -->
+  <!-- 25. ESTRUCTURA BÁSICA DE PYTHON -->
+  <!-- ═══════════════════════════════════════ -->
+  <div class="slide">
+    <div class="slide-header">
+      <h2>Estructura básica del código Python</h2>
+      <div class="slide-header-line"></div>
+    </div>
+    <div class="grid-2">
+      <div style="display:flex; flex-direction:column; gap:14px;">
+        <p>Python usa <strong class="highlight">indentación</strong> (espacios al inicio de línea) para definir bloques de código. No hay llaves <code>{}</code>.</p>
+        <pre><span class="code-cmt"># Variables — sin declarar tipo</span>
+<span class="code-var">nombre</span> = <span class="code-str">"Ana"</span>
+<span class="code-var">edad</span>   = <span class="code-num">25</span>
+<span class="code-var">activo</span> = <span class="code-num">True</span>
+
+<span class="code-cmt"># Condicional — la indentación delimita el bloque</span>
+<span class="code-kw">if</span> edad >= <span class="code-num">18</span>:
+    <span class="code-fn">print</span>(<span class="code-str">"Es mayor de edad"</span>)
+<span class="code-kw">else</span>:
+    <span class="code-fn">print</span>(<span class="code-str">"Es menor de edad"</span>)
+
+<span class="code-cmt"># Bucle</span>
+<span class="code-kw">for</span> <span class="code-var">i</span> <span class="code-kw">in</span> <span class="code-fn">range</span>(<span class="code-num">3</span>):
+    <span class="code-fn">print</span>(<span class="code-str">f"Iteración <span class="code-var">{i}</span>"</span>)
+
+<span class="code-cmt"># Función</span>
+<span class="code-kw">def</span> <span class="code-fn">saludar</span>(<span class="code-var">nombre</span>):
+    <span class="code-kw">return</span> <span class="code-str">f"Hola, <span class="code-var">{nombre}</span>!"</span></pre>
+      </div>
+      <div style="display:flex; flex-direction:column; gap:16px;">
+        <div class="callout">
+          <strong>La indentación NO es opcional en Python.</strong> A diferencia de otros lenguajes donde es solo estilo, aquí determina qué código está dentro de un bloque.
+        </div>
+        <p style="font-size:0.9rem; color:var(--muted);">Convención: usar <strong>4 espacios</strong> por nivel de indentación (VS Code lo hace automáticamente).</p>
+        <div class="callout-warn callout">
+          <strong>⚠️ Error común:</strong> Mezclar tabs y espacios. Usar siempre uno de los dos. Python 3 lanza error si los mezclas.
+        </div>
+        <div class="callout-green callout">
+          <strong class="green">Ventaja:</strong> Al obligar la indentación, Python garantiza que todo código bien escrito sea también fácil de leer.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════ -->
+  <!-- 25. PIP Y PAQUETES -->
+  <!-- ═══════════════════════════════════════ -->
+  <div class="slide">
+    <div class="slide-header">
+      <h2>pip — El gestor de paquetes de Python</h2>
+      <div class="slide-header-line"></div>
+    </div>
+    <div class="grid-2">
+      <div style="display:flex; flex-direction:column; gap:16px;">
+        <p>Python viene con <strong class="highlight">pip</strong>, una herramienta que te permite instalar cualquiera de los 500,000+ paquetes disponibles en internet con un solo comando.</p>
+        <p>Es como una "tienda de aplicaciones" para Python: encuentras una librería que resuelve tu problema, la instalas en segundos y ya está disponible en tu código.</p>
+        <p style="font-size:0.9rem; color:var(--muted);">Paquetes populares y para qué sirven:</p>
+        <div style="display:flex; flex-wrap:wrap; gap:8px;">
+          <span class="tag" style="color:var(--blue); border-color:var(--blue);">requests — HTTP</span>
+          <span class="tag" style="color:var(--gold); border-color:var(--gold);">pandas — datos</span>
+          <span class="tag" style="color:var(--green); border-color:var(--green);">flask — web</span>
+          <span class="tag" style="color:var(--orange); border-color:var(--orange);">numpy — matemáticas</span>
+          <span class="tag" style="color:var(--purple); border-color:var(--purple);">pillow — imágenes</span>
+          <span class="tag">selenium — automatización web</span>
+          <span class="tag">sqlalchemy — bases de datos</span>
+          <span class="tag">fastapi — APIs</span>
+        </div>
+      </div>
+      <div>
+        <p style="margin-bottom:12px; font-size:0.85rem; color:var(--muted);">Comandos esenciales de pip:</p>
+        <pre><span class="code-cmt"># Instalar un paquete</span>
+$ pip install requests
+
+<span class="code-cmt"># Instalar versión específica</span>
+$ pip install requests==2.31.0
+
+<span class="code-cmt"># Ver paquetes instalados</span>
+$ pip list
+
+<span class="code-cmt"># Desinstalar</span>
+$ pip uninstall requests
+
+<span class="code-cmt"># Guardar dependencias del proyecto</span>
+$ pip freeze > requirements.txt
+
+<span class="code-cmt"># Instalar desde requirements.txt</span>
+$ pip install -r requirements.txt</pre>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════ -->
+  <!-- 26. PYTHON VS OTROS DETALLE -->
+  <!-- ═══════════════════════════════════════ -->
+  <div class="slide">
+    <div class="slide-header">
+      <h2>¿Por qué Python y no otro lenguaje?</h2>
+      <div class="slide-header-line"></div>
+    </div>
+    <table class="compare" style="font-size:0.85rem;">
+      <tr>
+        <th>Característica</th>
+        <th class="highlight">Python</th>
+        <th>JavaScript</th>
+        <th>Java</th>
+        <th>C++</th>
+      </tr>
+      <tr>
+        <td>Facilidad de aprendizaje</td>
+        <td class="yes">Muy alta</td>
+        <td class="mid">Media</td>
+        <td class="no">Baja</td>
+        <td class="no">Muy baja</td>
+      </tr>
+      <tr>
+        <td>Velocidad de desarrollo</td>
+        <td class="yes">Muy rápida</td>
+        <td class="yes">Rápida</td>
+        <td class="mid">Media</td>
+        <td class="no">Lenta</td>
+      </tr>
+      <tr>
+        <td>Data Science / IA</td>
+        <td class="yes">Dominante</td>
+        <td class="no">Casi nulo</td>
+        <td class="mid">Existe</td>
+        <td class="mid">Bajo nivel</td>
+      </tr>
+      <tr>
+        <td>Desarrollo web backend</td>
+        <td class="yes">Excelente</td>
+        <td class="yes">Excelente</td>
+        <td class="yes">Excelente</td>
+        <td class="no">No aplica</td>
+      </tr>
+      <tr>
+        <td>Automatización / scripts</td>
+        <td class="yes">Excelente</td>
+        <td class="mid">Limitado</td>
+        <td class="mid">Posible</td>
+        <td class="mid">Complejo</td>
+      </tr>
+      <tr>
+        <td>Rendimiento puro</td>
+        <td class="mid">Bueno</td>
+        <td class="mid">Bueno</td>
+        <td class="yes">Alto</td>
+        <td class="yes">Máximo</td>
+      </tr>
+      <tr>
+        <td>Demanda laboral (2025)</td>
+        <td class="yes">#1 global</td>
+        <td class="yes">#2 global</td>
+        <td class="mid">#3 global</td>
+        <td class="mid">#4 global</td>
+      </tr>
+      <tr>
+        <td>Comunidad y recursos</td>
+        <td class="yes">Enorme</td>
+        <td class="yes">Enorme</td>
+        <td class="yes">Grande</td>
+        <td class="mid">Grande</td>
+      </tr>
+    </table>
+  </div>
+
+  <!-- ═══════════════════════════════════════ -->
+  <!-- 27. RECURSOS PARA APRENDER -->
+  <!-- ═══════════════════════════════════════ -->
+  <div class="slide">
+    <div class="slide-header">
+      <h2>Recursos para seguir aprendiendo</h2>
+      <div class="slide-header-line"></div>
+    </div>
+    <div class="grid-2">
+      <div style="display:flex; flex-direction:column; gap:14px;">
+        <h3 style="color:var(--muted); font-size:0.9rem; text-transform:uppercase; letter-spacing:1px;">Documentación oficial</h3>
+        <div class="card card-accent-blue">
+          <h3>docs.python.org/es</h3>
+          <p>Documentación oficial en español. Referencia completa de todos los módulos, funciones y características del lenguaje.</p>
+        </div>
+        <h3 style="color:var(--muted); font-size:0.9rem; text-transform:uppercase; letter-spacing:1px; margin-top:8px;">Plataformas de práctica</h3>
+        <div class="card card-accent-gold">
+          <h3>HackerRank / LeetCode</h3>
+          <p>Problemas de programación para practicar. Las empresas usan estas plataformas en sus entrevistas técnicas.</p>
+        </div>
+        <div class="card card-accent-green">
+          <h3>Codecademy / freeCodeCamp</h3>
+          <p>Cursos interactivos gratuitos con ejercicios en el navegador. Ideal para comenzar sin instalar nada.</p>
+        </div>
+      </div>
+      <div style="display:flex; flex-direction:column; gap:14px;">
+        <h3 style="color:var(--muted); font-size:0.9rem; text-transform:uppercase; letter-spacing:1px;">Comunidades</h3>
+        <ul class="clean">
+          <li><strong>Stack Overflow</strong> — Preguntas y respuestas técnicas. La respuesta a casi cualquier error ya está ahí.</li>
+          <li><strong>Reddit r/learnpython</strong> — Comunidad para principiantes, muy activa y amigable.</li>
+          <li><strong>Discord Python</strong> — Servidores de Python con miles de desarrolladores activos.</li>
+          <li><strong>GitHub</strong> — Lee código de proyectos reales. Aprende viendo cómo otros resuelven problemas.</li>
+        </ul>
+        <div class="callout-green callout">
+          <strong class="green">Consejo:</strong> La mejor forma de aprender Python es <strong>construyendo proyectos reales</strong>, no solo siguiendo tutoriales. Identifica un problema que tengas y resuélvelo con Python.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════ -->
+  <!-- 28. QUÉ VEREMOS EN ESTE CURSO -->
+  <!-- ═══════════════════════════════════════ -->
+  <div class="slide">
+    <div class="slide-header">
+      <h2>Contenido de este curso</h2>
+      <div class="slide-header-line"></div>
+    </div>
+    <div class="grid-2">
+      <div style="display:flex; flex-direction:column; gap:12px;">
+        <div class="card card-accent-blue" style="display:flex; gap:16px; align-items:flex-start;">
+          <span style="color:var(--blue); font-weight:900; font-size:1.1rem;">01</span>
+          <div><h3>Introducción a Python</h3><p>¿Qué es, para qué sirve, instalación y primeros pasos. <strong class="highlight">← Estamos aquí</strong></p></div>
+        </div>
+        <div class="card" style="display:flex; gap:16px; align-items:flex-start;">
+          <span style="color:var(--muted); font-weight:900; font-size:1.1rem;">02</span>
+          <div><h3>Tipos de Datos</h3><p>Strings, enteros, flotantes, booleanos, None. Operaciones y conversiones.</p></div>
+        </div>
+        <div class="card" style="display:flex; gap:16px; align-items:flex-start;">
+          <span style="color:var(--muted); font-weight:900; font-size:1.1rem;">03</span>
+          <div><h3>Estructuras de Control</h3><p>Condicionales (if/elif/else) y bucles (for/while).</p></div>
+        </div>
+        <div class="card" style="display:flex; gap:16px; align-items:flex-start;">
+          <span style="color:var(--muted); font-weight:900; font-size:1.1rem;">04</span>
+          <div><h3>Funciones</h3><p>Definir funciones, parámetros, retorno, alcance de variables.</p></div>
+        </div>
+      </div>
+      <div style="display:flex; flex-direction:column; gap:12px;">
+        <div class="card" style="display:flex; gap:16px; align-items:flex-start;">
+          <span style="color:var(--muted); font-weight:900; font-size:1.1rem;">05</span>
+          <div><h3>Listas y Arreglos</h3><p>Crear, acceder, modificar y recorrer listas. Métodos principales.</p></div>
+        </div>
+        <div class="card" style="display:flex; gap:16px; align-items:flex-start;">
+          <span style="color:var(--muted); font-weight:900; font-size:1.1rem;">06</span>
+          <div><h3>HTTP, APIs y Streamlit</h3><p>Consumir APIs REST, requests, construir apps web simples.</p></div>
+        </div>
+        <div class="card" style="display:flex; gap:16px; align-items:flex-start;">
+          <span style="color:var(--muted); font-weight:900; font-size:1.1rem;">07</span>
+          <div><h3>FastAPI</h3><p>Construir APIs profesionales con Python. Endpoints, validación, documentación automática.</p></div>
+        </div>
+        <div class="callout-green callout" style="margin-top:4px;">
+          Al terminar el curso tendrás las bases para trabajar en proyectos reales y continuar hacia Data Science, automatización o desarrollo web.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════ -->
+  <!-- 29. ACTIVIDAD -->
+  <!-- ═══════════════════════════════════════ -->
+  <div class="slide">
+    <div class="slide-header">
+      <h2>Actividad — Primer programa</h2>
+      <div class="slide-header-line"></div>
+    </div>
+    <div class="grid-2">
+      <div style="display:flex; flex-direction:column; gap:16px;">
+        <div class="callout-green callout">
+          <strong class="green">Objetivo:</strong> Instalar Python y VS Code, y ejecutar tu primer programa exitosamente.
+        </div>
+        <div class="card">
+          <h3>Paso 1 — Instalar</h3>
+          <p>Instala Python desde python.org y VS Code con la extensión de Python.</p>
+        </div>
+        <div class="card">
+          <h3>Paso 2 — Crear archivo</h3>
+          <p>Crea un archivo llamado <code style="color:var(--blue);">mi_primer_programa.py</code></p>
+        </div>
+        <div class="card">
+          <h3>Paso 3 — Escribir y ejecutar</h3>
+          <p>Escribe el código de la derecha y ejecútalo con <code style="color:var(--gold);">python mi_primer_programa.py</code></p>
+        </div>
+      </div>
+      <div>
+        <pre><span class="code-cmt"># Mi primer programa en Python</span>
+<span class="code-cmt"># Cambia los datos por los tuyos</span>
+
+<span class="code-var">nombre</span>  = <span class="code-str">"Tu nombre aquí"</span>
+<span class="code-var">carrera</span> = <span class="code-str">"Tu carrera aquí"</span>
+<span class="code-var">año</span>     = <span class="code-num">2025</span>
+
+<span class="code-fn">print</span>(<span class="code-str">"=" * 35</span>)
+<span class="code-fn">print</span>(<span class="code-str">f"  Hola, soy <span class="code-var">{nombre}</span>"</span>)
+<span class="code-fn">print</span>(<span class="code-str">f"  Carrera: <span class="code-var">{carrera}</span>"</span>)
+<span class="code-fn">print</span>(<span class="code-str">f"  Año: <span class="code-var">{año}</span>"</span>)
+<span class="code-fn">print</span>(<span class="code-str">"=" * 35</span>)
+<span class="code-fn">print</span>(<span class="code-str">"¡Python instalado correctamente! 🐍"</span>)</pre>
+        <div class="callout" style="margin-top:16px;">
+          <strong>Reto extra:</strong> Usa <code style="color:var(--blue);">input()</code> para que el programa le pida el nombre al usuario en vez de tenerlo escrito fijo.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════ -->
+  <!-- 30. CIERRE -->
+  <!-- ═══════════════════════════════════════ -->
+  <div class="slide slide-title">
+    <div class="python-logo">🐍</div>
+    <h1>¿Preguntas?</h1>
+    <p class="title-sub" style="max-width:600px; text-align:center; margin-top:16px;">
+      Python no se aprende viendo clases — se aprende escribiendo código.<br/>
+      El mejor momento para empezar es <span class="highlight">ahora</span>.
+    </p>
+    <div style="display:flex; gap:16px; margin-top:32px; flex-wrap:wrap; justify-content:center;">
+      <div class="callout" style="font-size:0.85rem; padding:12px 20px;">
+        📌 Próxima clase: <strong class="gold">Tipos de Datos en Python</strong>
+      </div>
+      <div class="callout" style="font-size:0.85rem; padding:12px 20px;">
+        💻 Tarea: Instalar Python + ejecutar primer programa
+      </div>
+    </div>
+    <span class="title-tag" style="margin-top:24px;">Módulo 1 — Completado</span>
+  </div>
+
+</div><!-- /slides-wrapper -->
+
+<div class="key-hint">← → para navegar</div>
+
+<script>
+  const STORAGE_KEY = 'slide_' + location.pathname;
+  const slides = document.querySelectorAll('.slide');
+  const total  = slides.length;
+  let current  = Math.min(parseInt(localStorage.getItem(STORAGE_KEY) || '0', 10), total - 1);
+
+  function updateUI() {
+    slides.forEach((s, i) => s.classList.toggle('active', i === current));
+    document.getElementById('counter').textContent  = `${current + 1} / ${total}`;
+    document.getElementById('progress').style.width = `${((current + 1) / total) * 100}%`;
+    document.getElementById('prevBtn').disabled = current === 0;
+    document.getElementById('nextBtn').disabled = current === total - 1;
+    localStorage.setItem(STORAGE_KEY, current);
+  }
+
+  function changeSlide(dir) {
+    const next = current + dir;
+    if (next >= 0 && next < total) { current = next; updateUI(); }
+  }
+
+  document.addEventListener('keydown', e => {
+    if (e.key === 'ArrowRight' || e.key === 'ArrowDown')  changeSlide(1);
+    if (e.key === 'ArrowLeft'  || e.key === 'ArrowUp')    changeSlide(-1);
+  });
+
+  updateUI();
+</script>
+</body>
+</html>

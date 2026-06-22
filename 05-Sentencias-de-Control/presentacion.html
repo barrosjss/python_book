@@ -1,0 +1,1041 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sentencias de Control — Python</title>
+<style>
+  :root {
+    --bg:      #0d1117;
+    --surface: #161b22;
+    --border:  #30363d;
+    --text:    #e6edf3;
+    --muted:   #8b949e;
+    --green:   #3fb950;
+    --teal:    #39d5c3;
+    --blue:    #58a6ff;
+    --gold:    #d29922;
+    --red:     #f85149;
+    --orange:  #f0883e;
+    --purple:  #bc8cff;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    height: 100vh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* ── NAVBAR ── */
+  nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 1.5rem;
+    height: 48px;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+  nav .module-tag {
+    font-size: .75rem;
+    font-weight: 700;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--green);
+    background: rgba(63,185,80,.12);
+    border: 1px solid rgba(63,185,80,.3);
+    padding: .2rem .7rem;
+    border-radius: 999px;
+  }
+  nav .nav-controls {
+    display: flex;
+    align-items: center;
+    gap: .75rem;
+  }
+  nav button {
+    background: var(--border);
+    color: var(--text);
+    border: none;
+    padding: .35rem .9rem;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: .85rem;
+    transition: background .15s;
+  }
+  nav button:hover:not(:disabled) { background: #444c56; }
+  nav button:disabled { opacity: .35; cursor: default; }
+  #counter { font-size: .85rem; color: var(--muted); min-width: 55px; text-align: center; }
+
+  /* ── PROGRESS ── */
+  .progress-bar {
+    height: 3px;
+    background: var(--border);
+    flex-shrink: 0;
+  }
+  #progress {
+    height: 100%;
+    background: linear-gradient(90deg, var(--green), var(--teal));
+    transition: width .3s ease;
+    width: 0%;
+  }
+
+  /* ── SLIDES ── */
+  .slides-wrapper { flex: 1; position: relative; overflow: hidden; }
+  .slide {
+    position: absolute;
+    inset: 0;
+    display: none;
+    padding: 3rem 4rem;
+    overflow-y: auto;
+  }
+  .slide.active { display: flex; flex-direction: column; justify-content: center; }
+
+  /* ── TYPOGRAPHY ── */
+  h1 { font-size: 3.2rem; font-weight: 800; line-height: 1.1; }
+  h2 { font-size: 2rem;   font-weight: 700; margin-bottom: 1.2rem; }
+  h3 { font-size: 1.35rem; font-weight: 600; margin-bottom: .6rem; }
+  p  { line-height: 1.65; color: var(--muted); font-size: 1.05rem; }
+  ul { padding-left: 1.4rem; }
+  li { line-height: 1.9; font-size: 1rem; }
+
+  /* ── CODE BLOCKS ── */
+  pre {
+    background: #010409;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 1.2rem 1.4rem;
+    font-family: 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
+    font-size: .92rem;
+    line-height: 1.65;
+    overflow-x: auto;
+    position: relative;
+  }
+  pre .lang-tag {
+    position: absolute;
+    top: .4rem; right: .7rem;
+    font-size: .68rem;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: .08em;
+  }
+  .kw   { color: #ff7b72; }
+  .fn   { color: #d2a8ff; }
+  .str  { color: #a5d6ff; }
+  .num  { color: #f2cc60; }
+  .cm   { color: #8b949e; font-style: italic; }
+  .var  { color: #ffa657; }
+  .op   { color: #79c0ff; }
+
+  /* ── CALLOUTS ── */
+  .callout {
+    border-radius: 8px;
+    padding: .85rem 1.1rem;
+    font-size: .95rem;
+    display: flex;
+    align-items: flex-start;
+    gap: .6rem;
+    margin-top: .8rem;
+  }
+  .callout.green  { background: rgba(63,185,80,.1);  border: 1px solid rgba(63,185,80,.3);  color: #9be9a8; }
+  .callout.teal   { background: rgba(57,213,195,.1); border: 1px solid rgba(57,213,195,.3); color: #39d5c3; }
+  .callout.orange { background: rgba(240,136,62,.1); border: 1px solid rgba(240,136,62,.3); color: var(--orange); }
+  .callout.red    { background: rgba(248,81,73,.1);  border: 1px solid rgba(248,81,73,.3);  color: #ffa198; }
+  .callout.blue   { background: rgba(88,166,255,.1); border: 1px solid rgba(88,166,255,.3); color: #79c0ff; }
+
+  /* ── TABLES ── */
+  table { width: 100%; border-collapse: collapse; font-size: .92rem; }
+  th { background: var(--surface); padding: .6rem .9rem; text-align: left; color: var(--teal); font-weight: 600; border-bottom: 2px solid var(--border); }
+  td { padding: .55rem .9rem; border-bottom: 1px solid var(--border); }
+  tr:last-child td { border-bottom: none; }
+  td code, th code { font-family: 'Cascadia Code', monospace; font-size: .88rem; background: rgba(255,255,255,.06); padding: .1em .35em; border-radius: 4px; }
+
+  /* ── GRIDS ── */
+  .cols-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1.4rem; }
+  .cols-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1.2rem; }
+
+  /* ── CARDS ── */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 1.1rem 1.2rem;
+  }
+  .card h3 { margin-bottom: .4rem; }
+
+  /* ── SECTION DIVIDER ── */
+  .section-divider {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    text-align: center;
+    gap: .6rem;
+  }
+  .section-divider .section-num {
+    font-size: .8rem;
+    font-weight: 700;
+    letter-spacing: .2em;
+    text-transform: uppercase;
+    color: var(--green);
+  }
+  .section-divider h2 {
+    font-size: 3rem;
+    font-weight: 800;
+    margin: 0;
+    background: linear-gradient(135deg, var(--green), var(--teal));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .section-divider p { font-size: 1.1rem; max-width: 520px; }
+
+  /* ── COVER ── */
+  .cover {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    text-align: center;
+    gap: 1rem;
+  }
+  .cover h1 {
+    background: linear-gradient(135deg, var(--green) 30%, var(--teal));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    font-size: 4rem;
+  }
+  .cover .subtitle { font-size: 1.25rem; color: var(--muted); }
+  .cover .badge {
+    background: rgba(63,185,80,.12);
+    border: 1px solid rgba(63,185,80,.3);
+    color: var(--green);
+    padding: .4rem 1.2rem;
+    border-radius: 999px;
+    font-size: .85rem;
+    font-weight: 600;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+  }
+
+  /* ── BADGE INLINE ── */
+  .badge-inline {
+    font-size: .75rem;
+    font-weight: 700;
+    padding: .15em .5em;
+    border-radius: 4px;
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    vertical-align: middle;
+  }
+  .badge-green  { background: rgba(63,185,80,.2);  color: var(--green);  }
+  .badge-teal   { background: rgba(57,213,195,.2); color: var(--teal);   }
+  .badge-orange { background: rgba(240,136,62,.2); color: var(--orange); }
+  .badge-red    { background: rgba(248,81,73,.2);  color: var(--red);    }
+
+  /* ── MEME SLIDE ── */
+  .meme-slide {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+  }
+  .meme-slide img { max-height: 72vh; max-width: 90%; object-fit: contain; border-radius: 8px; }
+
+  /* ── HIGHLIGHT BOX ── */
+  .highlight-box {
+    border-left: 4px solid var(--green);
+    padding: .7rem 1rem;
+    background: rgba(63,185,80,.06);
+    border-radius: 0 6px 6px 0;
+    margin: .6rem 0;
+  }
+
+  /* ── EXERCISES ── */
+  .exercise-list { display: flex; flex-direction: column; gap: .55rem; }
+  .exercise-item {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: .65rem 1rem;
+    font-size: .92rem;
+    display: flex;
+    gap: .7rem;
+    align-items: flex-start;
+  }
+  .exercise-item .ex-num {
+    font-weight: 700;
+    color: var(--green);
+    min-width: 24px;
+    font-size: .85rem;
+    margin-top: .05rem;
+  }
+  .exercise-item .ex-title { font-weight: 600; margin-bottom: .15rem; }
+  .exercise-item .ex-desc  { color: var(--muted); font-size: .87rem; }
+
+  /* ── FLOW VISUAL ── */
+  .flow { display: flex; align-items: center; gap: .5rem; flex-wrap: wrap; margin: .8rem 0; }
+  .flow-box {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: .45rem .9rem;
+    font-size: .88rem;
+    font-family: 'Cascadia Code', monospace;
+  }
+  .flow-arrow { color: var(--muted); font-size: 1.1rem; }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+</style>
+</head>
+<body>
+
+<!-- NAVBAR -->
+<nav>
+  <span class="module-tag">Módulo 05 · Sentencias de Control</span>
+  <div class="nav-controls">
+    <button id="prevBtn" onclick="changeSlide(-1)">← Anterior</button>
+    <span id="counter">1 / 20</span>
+    <button id="nextBtn" onclick="changeSlide(1)">Siguiente →</button>
+  </div>
+</nav>
+<div class="progress-bar"><div id="progress"></div></div>
+
+<div class="slides-wrapper">
+
+<!-- ══════════════════════════════════════════════
+     SLIDE 1 — PORTADA
+══════════════════════════════════════════════ -->
+<div class="slide active">
+  <div class="cover">
+    <span class="badge">Módulo 05</span>
+    <h1>Sentencias de Control</h1>
+    <p class="subtitle">if / elif / else &nbsp;·&nbsp; for &nbsp;·&nbsp; while &nbsp;·&nbsp; break &nbsp;·&nbsp; continue</p>
+    <p style="color:var(--muted); font-size:.95rem; max-width:520px;">
+      Aprende a tomar decisiones y repetir acciones en tus programas Python.
+    </p>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     SLIDE 2 — PANORAMA
+══════════════════════════════════════════════ -->
+<div class="slide">
+  <h2>¿Qué son las sentencias de control?</h2>
+  <p style="margin-bottom:1.4rem;">
+    Permiten alterar el flujo de ejecución del programa: decidir qué código
+    se ejecuta y cuántas veces.
+  </p>
+  <table>
+    <tr>
+      <th>Sentencia</th>
+      <th>Tipo</th>
+      <th>¿Cuándo usarla?</th>
+    </tr>
+    <tr>
+      <td><code>if / elif / else</code></td>
+      <td><span class="badge-inline badge-green">Condicional</span></td>
+      <td>Cuando una acción depende de una condición</td>
+    </tr>
+    <tr>
+      <td><code>for</code></td>
+      <td><span class="badge-inline badge-teal">Bucle</span></td>
+      <td>Cuando se conoce el número de iteraciones</td>
+    </tr>
+    <tr>
+      <td><code>while</code></td>
+      <td><span class="badge-inline badge-teal">Bucle</span></td>
+      <td>Cuando se repite mientras una condición sea verdadera</td>
+    </tr>
+    <tr>
+      <td><code>break</code></td>
+      <td><span class="badge-inline badge-red">Control</span></td>
+      <td>Salir del bucle antes de terminar</td>
+    </tr>
+    <tr>
+      <td><code>continue</code></td>
+      <td><span class="badge-inline badge-orange">Control</span></td>
+      <td>Saltar una iteración y continuar</td>
+    </tr>
+  </table>
+  <div class="callout teal" style="margin-top:1.2rem;">
+    <span>💡</span>
+    <span>Todos los bloques de código en Python se definen con <strong>indentación</strong> (4 espacios). No hay llaves <code>{}</code>.</span>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     SLIDE 3 — SECCIÓN: CONDICIONALES
+══════════════════════════════════════════════ -->
+<div class="slide">
+  <div class="section-divider">
+    <span class="section-num">Sección 01</span>
+    <h2>Condicionales</h2>
+    <p>if · elif · else · operador ternario</p>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     SLIDE 4 — if / if-else
+══════════════════════════════════════════════ -->
+<div class="slide">
+  <h2>Condicionales — <code style="color:var(--green)">if</code> y <code style="color:var(--green)">else</code></h2>
+  <p style="margin-bottom:1.2rem;">
+    <code>if</code> ejecuta un bloque solo si la condición es <strong>True</strong>.
+    <code>else</code> captura el caso contrario.
+  </p>
+  <div class="cols-2" style="gap:1.2rem;">
+    <div>
+      <p style="color:var(--green); font-size:.9rem; font-weight:600; margin-bottom:.4rem;">Solo if</p>
+      <pre><span class="lang-tag">python</span><span class="kw">if</span> condición:
+    <span class="cm"># código si es True</span></pre>
+    </div>
+    <div>
+      <p style="color:var(--teal); font-size:.9rem; font-weight:600; margin-bottom:.4rem;">if + else</p>
+      <pre><span class="lang-tag">python</span><span class="kw">if</span> condición:
+    <span class="cm"># si es True</span>
+<span class="kw">else</span>:
+    <span class="cm"># si es False</span></pre>
+    </div>
+  </div>
+
+  <p style="margin: 1rem 0 .5rem; font-weight:600; color:var(--text);">Ejemplo real:</p>
+  <pre><span class="lang-tag">python</span><span class="var">edad</span> = <span class="fn">int</span>(<span class="fn">input</span>(<span class="str">"Tu edad: "</span>))
+
+<span class="kw">if</span> <span class="var">edad</span> >= <span class="num">18</span>:
+    <span class="fn">print</span>(<span class="str">"Puedes votar"</span>)
+<span class="kw">else</span>:
+    <span class="fn">print</span>(<span class="str">"Aún no puedes votar"</span>)</pre>
+
+  <div class="callout green">
+    <span>✅</span>
+    <span>La indentación (4 espacios) define qué código pertenece al bloque. Sin ella, Python lanza error.</span>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     SLIDE 5 — elif
+══════════════════════════════════════════════ -->
+<div class="slide">
+  <div class="cols-2" style="align-items:start; gap:2rem;">
+    <div>
+      <h2>Condicionales — <code style="color:var(--green)">elif</code></h2>
+      <p style="margin-bottom:1rem;">
+        <code>elif</code> (else if) verifica condiciones alternativas. Solo se
+        ejecuta si las anteriores fueron <strong>False</strong>.
+      </p>
+      <pre><span class="lang-tag">python</span><span class="kw">if</span> condición1:
+    <span class="cm"># si condición1 es True</span>
+<span class="kw">elif</span> condición2:
+    <span class="cm"># si condición2 es True</span>
+<span class="kw">elif</span> condición3:
+    <span class="cm"># si condición3 es True</span>
+<span class="kw">else</span>:
+    <span class="cm"># ninguna se cumplió</span></pre>
+
+      <p style="margin: 1rem 0 .5rem; font-weight:600; color:var(--text);">Clasificación de notas:</p>
+      <pre><span class="lang-tag">python</span><span class="var">nota</span> = <span class="fn">int</span>(<span class="fn">input</span>(<span class="str">"Nota (0-100): "</span>))
+
+<span class="kw">if</span> <span class="var">nota</span> >= <span class="num">90</span>:
+    <span class="fn">print</span>(<span class="str">"Excelente 🏆"</span>)
+<span class="kw">elif</span> <span class="var">nota</span> >= <span class="num">70</span>:
+    <span class="fn">print</span>(<span class="str">"Aprobado ✅"</span>)
+<span class="kw">else</span>:
+    <span class="fn">print</span>(<span class="str">"Reprobado ❌"</span>)</pre>
+    </div>
+    <div style="display:flex; align-items:center; justify-content:center; height:100%;">
+      <img src="imagenes/meme-elif.png" alt="Noah's ark meme: elif, if, else"
+           style="max-width:100%; max-height:42vh; border-radius:10px; object-fit:contain;"
+           onerror="this.style.display='none'">
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     SLIDE 6 — Varios if vs if/elif/else
+══════════════════════════════════════════════ -->
+<div class="slide">
+  <h2>Varios <code style="color:var(--green)">if</code> vs <code style="color:var(--green)">if/elif/else</code></h2>
+  <p style="margin-bottom:1.2rem;">Diferencia clave: con varios <code>if</code> se evalúan <em>todas</em> las condiciones. Con <code>if/elif/else</code> se evalúa solo <em>un bloque</em>.</p>
+
+  <div class="cols-2">
+    <div>
+      <div class="callout orange" style="margin-bottom:.8rem;">
+        <span>⚠️</span>
+        <span><strong>Varios if</strong> — todas las condiciones se evalúan</span>
+      </div>
+      <pre><span class="lang-tag">python</span><span class="var">x</span> = <span class="num">15</span>
+
+<span class="kw">if</span> <span class="var">x</span> > <span class="num">10</span>:
+    <span class="fn">print</span>(<span class="str">"Mayor que 10"</span>)   <span class="cm"># ✓</span>
+<span class="kw">if</span> <span class="var">x</span> > <span class="num">0</span>:
+    <span class="fn">print</span>(<span class="str">"Positivo"</span>)       <span class="cm"># ✓ también</span>
+<span class="cm"># Se imprimen LOS DOS</span></pre>
+    </div>
+    <div>
+      <div class="callout green" style="margin-bottom:.8rem;">
+        <span>✅</span>
+        <span><strong>if/elif/else</strong> — se evalúa solo un bloque</span>
+      </div>
+      <pre><span class="lang-tag">python</span><span class="var">x</span> = <span class="num">15</span>
+
+<span class="kw">if</span> <span class="var">x</span> > <span class="num">10</span>:
+    <span class="fn">print</span>(<span class="str">"Mayor que 10"</span>)   <span class="cm"># ✓</span>
+<span class="kw">elif</span> <span class="var">x</span> > <span class="num">0</span>:
+    <span class="fn">print</span>(<span class="str">"Positivo"</span>)   <span class="cm"># No se evalúa</span>
+<span class="kw">else</span>:
+    <span class="fn">print</span>(<span class="str">"Cero o negativo"</span>)
+<span class="cm"># Solo imprime "Mayor que 10"</span></pre>
+    </div>
+  </div>
+
+  <div class="callout blue" style="margin-top:1rem;">
+    <span>📌</span>
+    <span>Usa <code>if/elif/else</code> cuando las condiciones son mutuamente excluyentes. Usa varios <code>if</code> cuando pueden cumplirse varias a la vez.</span>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     SLIDE 7 — OPERADOR TERNARIO
+══════════════════════════════════════════════ -->
+<div class="slide">
+  <h2>Operador Ternario</h2>
+  <p style="margin-bottom:1.2rem;">Forma compacta de escribir un <code>if...else</code> en una sola línea.</p>
+
+  <div class="highlight-box" style="border-color:var(--teal); background:rgba(57,213,195,.06); margin-bottom:1.2rem;">
+    <pre style="background:transparent; border:none; padding:.2rem 0; font-size:1rem;"><span class="var">resultado</span> = <span class="var">valor_si_true</span> <span class="kw">if</span> condición <span class="kw">else</span> <span class="var">valor_si_false</span></pre>
+  </div>
+
+  <div class="cols-2" style="gap:1.2rem;">
+    <div>
+      <p style="color:var(--muted); font-size:.85rem; margin-bottom:.5rem;">Forma clásica:</p>
+      <pre><span class="lang-tag">python</span><span class="var">edad</span> = <span class="num">20</span>
+<span class="kw">if</span> <span class="var">edad</span> >= <span class="num">18</span>:
+    <span class="var">msg</span> = <span class="str">"Mayor de edad"</span>
+<span class="kw">else</span>:
+    <span class="var">msg</span> = <span class="str">"Menor de edad"</span>
+<span class="fn">print</span>(<span class="var">msg</span>)</pre>
+    </div>
+    <div>
+      <p style="color:var(--muted); font-size:.85rem; margin-bottom:.5rem;">Con ternario:</p>
+      <pre><span class="lang-tag">python</span><span class="var">edad</span> = <span class="num">20</span>
+<span class="var">msg</span> = <span class="str">"Mayor de edad"</span> <span class="kw">if</span> <span class="var">edad</span> >= <span class="num">18</span> \
+      <span class="kw">else</span> <span class="str">"Menor de edad"</span>
+<span class="fn">print</span>(<span class="var">msg</span>)</pre>
+    </div>
+  </div>
+
+  <p style="margin:1rem 0 .5rem; font-weight:600;">Directamente en <code>print</code>:</p>
+  <pre><span class="lang-tag">python</span><span class="fn">print</span>(<span class="str">"Acceso permitido"</span> <span class="kw">if</span> <span class="var">edad</span> >= <span class="num">18</span> <span class="kw">else</span> <span class="str">"Acceso denegado"</span>)</pre>
+
+  <div class="callout orange">
+    <span>⚠️</span>
+    <span>Útil para casos simples. No lo uses con lógica compleja — prefiere el <code>if</code> clásico para mantener legibilidad.</span>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     SLIDE 8 — SECCIÓN: BUCLES
+══════════════════════════════════════════════ -->
+<div class="slide">
+  <div class="section-divider">
+    <span class="section-num">Sección 02</span>
+    <h2>Bucles y Ciclos</h2>
+    <p>for · range() · while · break · continue · else</p>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     SLIDE 9 — for + range básico
+══════════════════════════════════════════════ -->
+<div class="slide">
+  <div class="cols-2" style="align-items:start; gap:2rem;">
+    <div>
+      <h2>Bucle <code style="color:var(--teal)">for</code></h2>
+      <p style="margin-bottom:1rem;">
+        Recorre un iterable (lista, string, rango…) ejecutando el bloque
+        en cada elemento. Número de iteraciones <strong>definido</strong>.
+      </p>
+      <pre><span class="lang-tag">python</span><span class="kw">for</span> <span class="var">variable</span> <span class="kw">in</span> secuencia:
+    <span class="cm"># bloque a repetir</span></pre>
+
+      <p style="margin: 1rem 0 .5rem; font-weight:600;">Con <code>range()</code>:</p>
+      <pre><span class="lang-tag">python</span><span class="kw">for</span> <span class="var">i</span> <span class="kw">in</span> <span class="fn">range</span>(<span class="num">5</span>):          <span class="cm"># 0,1,2,3,4</span>
+    <span class="fn">print</span>(<span class="var">i</span>)
+
+<span class="kw">for</span> <span class="var">i</span> <span class="kw">in</span> <span class="fn">range</span>(<span class="num">1</span>, <span class="num">6</span>):       <span class="cm"># 1,2,3,4,5</span>
+    <span class="fn">print</span>(<span class="var">i</span>)
+
+<span class="kw">for</span> <span class="var">i</span> <span class="kw">in</span> <span class="fn">range</span>(<span class="num">0</span>, <span class="num">10</span>, <span class="num">2</span>):   <span class="cm"># 0,2,4,6,8</span>
+    <span class="fn">print</span>(<span class="var">i</span>)</pre>
+    </div>
+    <div style="display:flex; align-items:center; justify-content:center;">
+      <img src="imagenes/meme-for.png" alt="Tingo Tingo Tango meme"
+           style="max-width:100%; max-height:44vh; border-radius:10px; object-fit:contain;"
+           onerror="this.style.display='none'">
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     SLIDE 10 — for: recorrer listas, strings, dicts
+══════════════════════════════════════════════ -->
+<div class="slide">
+  <h2><code style="color:var(--teal)">for</code> — Recorriendo estructuras</h2>
+  <div class="cols-2" style="gap:1.2rem; margin-bottom:1rem;">
+    <div>
+      <p style="color:var(--green); font-weight:600; font-size:.9rem; margin-bottom:.4rem;">Lista</p>
+      <pre><span class="lang-tag">python</span><span class="var">frutas</span> = [<span class="str">"mango"</span>, <span class="str">"pera"</span>, <span class="str">"uva"</span>]
+<span class="kw">for</span> <span class="var">fruta</span> <span class="kw">in</span> <span class="var">frutas</span>:
+    <span class="fn">print</span>(<span class="var">fruta</span>)</pre>
+    </div>
+    <div>
+      <p style="color:var(--teal); font-weight:600; font-size:.9rem; margin-bottom:.4rem;">String (carácter a carácter)</p>
+      <pre><span class="lang-tag">python</span><span class="kw">for</span> <span class="var">letra</span> <span class="kw">in</span> <span class="str">"Python"</span>:
+    <span class="fn">print</span>(<span class="var">letra</span>)</pre>
+    </div>
+  </div>
+  <div class="cols-2" style="gap:1.2rem;">
+    <div>
+      <p style="color:var(--orange); font-weight:600; font-size:.9rem; margin-bottom:.4rem;">Diccionario (claves y valores)</p>
+      <pre><span class="lang-tag">python</span><span class="var">notas</span> = {<span class="str">"Ana"</span>: <span class="num">4.5</span>, <span class="str">"Luis"</span>: <span class="num">3.8</span>}
+
+<span class="kw">for</span> <span class="var">nombre</span>, <span class="var">nota</span> <span class="kw">in</span> <span class="var">notas</span>.items():
+    <span class="fn">print</span>(<span class="fn">f</span><span class="str">"{<span class="var">nombre</span>}: {<span class="var">nota</span>}"</span>)</pre>
+    </div>
+    <div>
+      <p style="color:var(--purple); font-weight:600; font-size:.9rem; margin-bottom:.4rem;"><code>enumerate()</code> — índice + valor</p>
+      <pre><span class="lang-tag">python</span><span class="var">colores</span> = [<span class="str">"rojo"</span>, <span class="str">"verde"</span>, <span class="str">"azul"</span>]
+<span class="kw">for</span> <span class="var">i</span>, <span class="var">color</span> <span class="kw">in</span> <span class="fn">enumerate</span>(<span class="var">colores</span>):
+    <span class="fn">print</span>(<span class="fn">f</span><span class="str">"{<span class="var">i</span>}: {<span class="var">color</span>}"</span>)</pre>
+    </div>
+  </div>
+  <div class="callout blue" style="margin-top:1rem;">
+    <span>💡</span>
+    <span><code>enumerate()</code> entrega el índice y el valor juntos — no necesitas llevar un contador manualmente.</span>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     SLIDE 11 — while
+══════════════════════════════════════════════ -->
+<div class="slide">
+  <div class="cols-2" style="align-items:start; gap:2rem;">
+    <div>
+      <h2>Bucle <code style="color:var(--teal)">while</code></h2>
+      <p style="margin-bottom:1rem;">
+        Repite el bloque <strong>mientras</strong> la condición sea <strong>True</strong>.
+        Número de iteraciones <em>indefinido</em>.
+      </p>
+      <pre><span class="lang-tag">python</span><span class="kw">while</span> condición:
+    <span class="cm"># bloque a repetir</span></pre>
+
+      <p style="margin: 1rem 0 .5rem; font-weight:600;">Ejemplo — contar hasta 5:</p>
+      <pre><span class="lang-tag">python</span><span class="var">contador</span> = <span class="num">1</span>
+<span class="kw">while</span> <span class="var">contador</span> <= <span class="num">5</span>:
+    <span class="fn">print</span>(<span class="var">contador</span>)
+    <span class="var">contador</span> += <span class="num">1</span></pre>
+
+      <div class="callout red" style="margin-top:.8rem;">
+        <span>🚨</span>
+        <div>
+          <strong>Loop infinito:</strong> si la condición nunca se vuelve False,
+          el programa se cuelga.<br>
+          <code>while True:</code>&ensp;→&ensp;requiere <code>break</code> para salir.
+        </div>
+      </div>
+    </div>
+    <div style="display:flex; align-items:center; justify-content:center;">
+      <img src="imagenes/meme-while.png" alt="Rick and Morty infinite loop meme"
+           style="max-width:100%; max-height:44vh; border-radius:10px; object-fit:contain;"
+           onerror="this.style.display='none'">
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     SLIDE 12 — break y continue
+══════════════════════════════════════════════ -->
+<div class="slide">
+  <h2 style="text-align:center; margin-bottom:1.2rem;">Bucles — <code style="color:var(--red)">break</code> y <code style="color:var(--orange)">continue</code></h2>
+  <div class="cols-2" style="gap:1.5rem; align-items:start;">
+    <div>
+      <div style="display:flex; align-items:center; gap:.6rem; margin-bottom:.7rem;">
+        <img src="imagenes/meme-break.png" alt="Gandalf meme"
+             style="height:5rem; border-radius:6px; object-fit:cover;"
+             onerror="this.parentElement.querySelector('.fallback-icon').style.display='block'; this.style.display='none'">
+        <span class="fallback-icon" style="display:none; font-size:2rem;">🚫</span>
+        <div>
+          <p style="color:var(--red); font-weight:700; font-size:1rem;">break</p>
+          <p style="font-size:.88rem; color:var(--muted);">Sale completamente del bucle, aunque la condición siga siendo True.</p>
+        </div>
+      </div>
+      <pre><span class="lang-tag">python</span><span class="kw">for</span> <span class="var">numero</span> <span class="kw">in</span> <span class="fn">range</span>(<span class="num">10</span>):
+    <span class="kw">if</span> <span class="var">numero</span> == <span class="num">5</span>:
+        <span class="kw">break</span>       <span class="cm"># para en 5</span>
+    <span class="fn">print</span>(<span class="var">numero</span>)
+<span class="cm"># Imprime: 0 1 2 3 4</span></pre>
+    </div>
+    <div>
+      <div style="display:flex; align-items:center; gap:.6rem; margin-bottom:.7rem;">
+        <img src="imagenes/meme-continue.png" alt="Seagulls skip meme"
+             style="height:5rem; border-radius:6px; object-fit:cover;"
+             onerror="this.parentElement.querySelector('.fallback-icon2').style.display='block'; this.style.display='none'">
+        <span class="fallback-icon2" style="display:none; font-size:2rem;">⏭️</span>
+        <div>
+          <p style="color:var(--orange); font-weight:700; font-size:1rem;">continue</p>
+          <p style="font-size:.88rem; color:var(--muted);">Salta el resto de la iteración actual y va a la siguiente.</p>
+        </div>
+      </div>
+      <pre><span class="lang-tag">python</span><span class="kw">for</span> <span class="var">numero</span> <span class="kw">in</span> <span class="fn">range</span>(<span class="num">5</span>):
+    <span class="kw">if</span> <span class="var">numero</span> == <span class="num">2</span>:
+        <span class="kw">continue</span>    <span class="cm"># salta el 2</span>
+    <span class="fn">print</span>(<span class="var">numero</span>)
+<span class="cm"># Imprime: 0 1 3 4</span></pre>
+    </div>
+  </div>
+  <div class="callout teal" style="margin-top:1rem;">
+    <span>🧭</span>
+    <span><code>break</code> = "No pasarás" — corta el bucle. &nbsp; <code>continue</code> = "Skip" — salta esa vuelta y sigue.</span>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     SLIDE 13 — break/continue ejemplo completo
+══════════════════════════════════════════════ -->
+<div class="slide">
+  <h2>break y continue — Ejemplo completo</h2>
+  <p style="margin-bottom:1rem;">Un programa que pide números: ignora el <code>0</code> con <code>continue</code> y para con número negativo usando <code>break</code>.</p>
+
+  <pre><span class="lang-tag">python</span><span class="kw">while</span> <span class="kw">True</span>:
+    <span class="var">numero</span> = <span class="fn">int</span>(<span class="fn">input</span>(<span class="str">"Ingresa un número: "</span>))
+
+    <span class="kw">if</span> <span class="var">numero</span> == <span class="num">0</span>:
+        <span class="fn">print</span>(<span class="str">"Cero ignorado → continue\n"</span>)
+        <span class="kw">continue</span>       <span class="cm"># salta el print final, vuelve al while</span>
+
+    <span class="kw">if</span> <span class="var">numero</span> < <span class="num">0</span>:
+        <span class="fn">print</span>(<span class="str">"Número negativo → deteniendo con break."</span>)
+        <span class="kw">break</span>          <span class="cm"># sale completamente del bucle</span>
+
+    <span class="fn">print</span>(<span class="fn">f</span><span class="str">"Número aceptado: {<span class="var">numero</span>}\n"</span>)</pre>
+
+  <div class="callout green" style="margin-top:1rem;">
+    <span>📌</span>
+    <span><code>while True</code> crea un bucle infinito intencional. <strong>Siempre</strong> debe tener un <code>break</code> para salir.</span>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     SLIDE 14 — else en bucles
+══════════════════════════════════════════════ -->
+<div class="slide">
+  <h2><code style="color:var(--teal)">else</code> en bucles</h2>
+  <p style="margin-bottom:1rem;">
+    El bloque <code>else</code> de un bucle se ejecuta solo si el ciclo
+    <strong>terminó normalmente</strong> (sin <code>break</code>).
+  </p>
+
+  <div class="cols-2" style="gap:1.2rem;">
+    <div>
+      <p style="color:var(--green); font-weight:600; font-size:.9rem; margin-bottom:.4rem;">Con for:</p>
+      <pre><span class="lang-tag">python</span><span class="kw">for</span> <span class="var">n</span> <span class="kw">in</span> [<span class="num">1</span>, <span class="num">3</span>, <span class="num">7</span>]:
+    <span class="kw">if</span> <span class="var">n</span> == <span class="num">5</span>:
+        <span class="kw">break</span>
+<span class="kw">else</span>:
+    <span class="fn">print</span>(<span class="str">"No se encontró el 5"</span>)
+<span class="cm"># → imprime el mensaje (no hubo break)</span></pre>
+    </div>
+    <div>
+      <p style="color:var(--teal); font-weight:600; font-size:.9rem; margin-bottom:.4rem;">Con while:</p>
+      <pre><span class="lang-tag">python</span><span class="var">intentos</span> = <span class="num">0</span>
+<span class="kw">while</span> <span class="var">intentos</span> < <span class="num">3</span>:
+    <span class="var">pwd</span> = <span class="fn">input</span>(<span class="str">"Contraseña: "</span>)
+    <span class="kw">if</span> <span class="var">pwd</span> == <span class="str">"python"</span>:
+        <span class="fn">print</span>(<span class="str">"Acceso concedido"</span>)
+        <span class="kw">break</span>
+    <span class="var">intentos</span> += <span class="num">1</span>
+<span class="kw">else</span>:
+    <span class="fn">print</span>(<span class="str">"Cuenta bloqueada"</span>)
+<span class="cm"># else solo corre si agotó los 3 intentos</span></pre>
+    </div>
+  </div>
+
+  <div class="callout blue" style="margin-top:1rem;">
+    <span>💡</span>
+    <span>El <code>else</code> en bucles es exclusivo de Python. Úsalo para detectar si un bucle terminó "exitosamente" sin interrupción.</span>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     SLIDE 15 — List comprehension (bonus)
+══════════════════════════════════════════════ -->
+<div class="slide">
+  <h2>List Comprehension — <code style="color:var(--teal)">for</code> en una línea</h2>
+  <p style="margin-bottom:1.1rem;">
+    Forma compacta de crear listas usando <code>for</code> (y opcionalmente <code>if</code>) en una sola expresión.
+  </p>
+
+  <div class="highlight-box" style="border-color:var(--teal); background:rgba(57,213,195,.06); margin-bottom:1.2rem;">
+    <pre style="background:transparent; border:none; padding:.2rem 0; font-size:1rem;"><span class="var">nueva_lista</span> = [<span class="var">expresión</span> <span class="kw">for</span> <span class="var">item</span> <span class="kw">in</span> iterable <span class="kw">if</span> condición]</pre>
+  </div>
+
+  <div class="cols-2" style="gap:1.2rem;">
+    <div>
+      <p style="color:var(--muted); font-size:.85rem; margin-bottom:.4rem;">Forma clásica:</p>
+      <pre><span class="lang-tag">python</span><span class="var">cuadrados</span> = []
+<span class="kw">for</span> <span class="var">n</span> <span class="kw">in</span> <span class="fn">range</span>(<span class="num">5</span>):
+    <span class="var">cuadrados</span>.append(<span class="var">n</span> ** <span class="num">2</span>)
+<span class="cm"># [0, 1, 4, 9, 16]</span></pre>
+    </div>
+    <div>
+      <p style="color:var(--muted); font-size:.85rem; margin-bottom:.4rem;">Con comprehension:</p>
+      <pre><span class="lang-tag">python</span><span class="var">cuadrados</span> = [<span class="var">n</span> ** <span class="num">2</span> <span class="kw">for</span> <span class="var">n</span> <span class="kw">in</span> <span class="fn">range</span>(<span class="num">5</span>)]
+<span class="cm"># [0, 1, 4, 9, 16]</span></pre>
+    </div>
+  </div>
+
+  <p style="margin:1rem 0 .5rem; font-weight:600;">Con filtro <code>if</code>:</p>
+  <pre><span class="lang-tag">python</span><span class="var">pares</span> = [<span class="var">n</span> <span class="kw">for</span> <span class="var">n</span> <span class="kw">in</span> <span class="fn">range</span>(<span class="num">10</span>) <span class="kw">if</span> <span class="var">n</span> % <span class="num">2</span> == <span class="num">0</span>]   <span class="cm"># [0, 2, 4, 6, 8]</span>
+
+<span class="var">mayusculas</span> = [<span class="var">p</span>.upper() <span class="kw">for</span> <span class="var">p</span> <span class="kw">in</span> [<span class="str">"ana"</span>, <span class="str">"luis"</span>, <span class="str">"marta"</span>]]   <span class="cm"># ['ANA', 'LUIS', 'MARTA']</span></pre>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     SLIDE 16 — EJERCICIOS if (meme + lista)
+══════════════════════════════════════════════ -->
+<div class="slide">
+  <h2>Ejercicios — Condicionales</h2>
+  <div class="cols-2" style="gap:1.4rem; align-items:start;">
+    <div>
+      <p style="color:var(--green); font-weight:700; font-size:.9rem; margin-bottom:.7rem;">Básicos</p>
+      <div class="exercise-list">
+        <div class="exercise-item">
+          <span class="ex-num">1</span>
+          <div><div class="ex-title">Positivo / negativo / cero</div><div class="ex-desc">Pide un número e imprime cuál es.</div></div>
+        </div>
+        <div class="exercise-item">
+          <span class="ex-num">2</span>
+          <div><div class="ex-title">Edad para votar</div><div class="ex-desc">Solicita la edad, imprime si puede votar (≥18).</div></div>
+        </div>
+        <div class="exercise-item">
+          <span class="ex-num">3</span>
+          <div><div class="ex-title">Par o impar</div><div class="ex-desc">Pide un número, determina si es par o impar.</div></div>
+        </div>
+        <div class="exercise-item">
+          <span class="ex-num">4</span>
+          <div><div class="ex-title">Mayor de dos números</div><div class="ex-desc">Pide dos números, imprime el mayor o si son iguales.</div></div>
+        </div>
+        <div class="exercise-item">
+          <span class="ex-num">5</span>
+          <div><div class="ex-title">Clasificación de notas</div><div class="ex-desc">90–100: Excelente · 70–89: Aprobado · &lt;70: Reprobado</div></div>
+        </div>
+      </div>
+    </div>
+    <div>
+      <p style="color:var(--gold); font-weight:700; font-size:.9rem; margin-bottom:.7rem;">Intermedios</p>
+      <div class="exercise-list">
+        <div class="exercise-item">
+          <span class="ex-num" style="color:var(--gold)">6</span>
+          <div><div class="ex-title">Tipo de carácter</div><div class="ex-desc">Un carácter: ¿es letra, número o símbolo?</div></div>
+        </div>
+        <div class="exercise-item">
+          <span class="ex-num" style="color:var(--gold)">7</span>
+          <div><div class="ex-title">Año bisiesto</div><div class="ex-desc">Divisible por 4 pero no por 100, excepto si es por 400.</div></div>
+        </div>
+        <div class="exercise-item">
+          <span class="ex-num" style="color:var(--gold)">8</span>
+          <div><div class="ex-title">Descuento en tienda</div><div class="ex-desc">≥100k: 10% · ≥50k: 5% · &lt;50k: sin descuento</div></div>
+        </div>
+        <div class="exercise-item">
+          <span class="ex-num" style="color:var(--gold)">9</span>
+          <div><div class="ex-title">Día de la semana</div><div class="ex-desc">Número 1–7 → nombre del día. Fuera del rango: error.</div></div>
+        </div>
+        <div class="exercise-item">
+          <span class="ex-num" style="color:var(--gold)">10</span>
+          <div><div class="ex-title">Categoría de edad</div><div class="ex-desc">0–12: niño · 13–17: adolescente · 18–59: adulto · 60+: adulto mayor</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     SLIDE 17 — MEME EJERCICIOS
+══════════════════════════════════════════════ -->
+<div class="slide">
+  <div class="meme-slide">
+    <img src="imagenes/meme-ejercicios.png" alt="Ejercicios ejercicios por todos lados"
+         onerror="this.parentElement.innerHTML='<div style=\'text-align:center\'><p style=\'font-size:3rem\'>🧩</p><h2 style=\'margin-top:1rem\'>Ejercicios</h2><p style=\'margin-top:.5rem; font-size:1.3rem; color:var(--muted)\'>Ejercicios por todos lados</p></div>'">
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     SLIDE 18 — EJERCICIOS for/while
+══════════════════════════════════════════════ -->
+<div class="slide">
+  <h2>Ejercicios — Bucles</h2>
+  <div class="cols-2" style="gap:1.4rem; align-items:start;">
+    <div>
+      <p style="color:var(--green); font-weight:700; font-size:.9rem; margin-bottom:.7rem;">Básicos</p>
+      <div class="exercise-list">
+        <div class="exercise-item">
+          <span class="ex-num">1</span>
+          <div><div class="ex-title">Sumar lista</div><div class="ex-desc"><code>[1,2,3,4,5]</code> — suma con <code>for</code>.</div></div>
+        </div>
+        <div class="exercise-item">
+          <span class="ex-num">2</span>
+          <div><div class="ex-title">Mayor de una lista</div><div class="ex-desc"><code>[3,8,2,7,5]</code> — usa variable auxiliar.</div></div>
+        </div>
+        <div class="exercise-item">
+          <span class="ex-num">3</span>
+          <div><div class="ex-title">Contar pares</div><div class="ex-desc"><code>[2,5,8,9,12,15]</code> — cuenta cuántos son pares.</div></div>
+        </div>
+        <div class="exercise-item">
+          <span class="ex-num">4</span>
+          <div><div class="ex-title">Buscar palabra</div><div class="ex-desc"><code>['hola','mundo','python']</code> — pide una palabra y verifica si está.</div></div>
+        </div>
+        <div class="exercise-item">
+          <span class="ex-num">5</span>
+          <div><div class="ex-title">Sumar dict</div><div class="ex-desc"><code>{'Mate':4.5,'Química':3.8,'Física':4.0}</code> — suma valores.</div></div>
+        </div>
+      </div>
+    </div>
+    <div>
+      <p style="color:var(--gold); font-weight:700; font-size:.9rem; margin-bottom:.7rem;">Intermedios / Avanzados</p>
+      <div class="exercise-list">
+        <div class="exercise-item">
+          <span class="ex-num" style="color:var(--gold)">6</span>
+          <div><div class="ex-title">Filtrar vocales</div><div class="ex-desc">Lista de palabras → nueva lista solo con las que inician en vocal.</div></div>
+        </div>
+        <div class="exercise-item">
+          <span class="ex-num" style="color:var(--gold)">7</span>
+          <div><div class="ex-title">Buscar y parar (break)</div><div class="ex-desc">Recorre lista, imprime "Encontrado" y rompe el ciclo.</div></div>
+        </div>
+        <div class="exercise-item">
+          <span class="ex-num" style="color:var(--gold)">8</span>
+          <div><div class="ex-title">Conteo de letras</div><div class="ex-desc"><code>'banana'</code> → <code>{'b':1,'a':3,'n':2}</code> usando dict.</div></div>
+        </div>
+        <div class="exercise-item">
+          <span class="ex-num" style="color:var(--gold)">9</span>
+          <div><div class="ex-title">Cajero automático</div><div class="ex-desc"><code>saldo=100000</code> — retira mientras haya saldo o escriba "salir".</div></div>
+        </div>
+        <div class="exercise-item">
+          <span class="ex-num" style="color:var(--red)">10</span>
+          <div><div class="ex-title">Menú interactivo</div><div class="ex-desc">Opciones: agregar · ver · salir. Usa while + if/elif/else + lista.</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     SLIDE 19 — ACTIVIDAD EN CLASE
+══════════════════════════════════════════════ -->
+<div class="slide">
+  <h2>Actividad — Sistema de Calificaciones</h2>
+  <p style="margin-bottom:1.2rem;">
+    Programa que pide notas de estudiantes, las clasifica y muestra estadísticas. Combina <strong>while</strong> + <strong>if/elif</strong> + <strong>for</strong>.
+  </p>
+
+  <pre style="font-size:.85rem;"><span class="lang-tag">python</span><span class="var">notas</span> = []
+<span class="var">continuar</span> = <span class="str">"s"</span>
+
+<span class="kw">while</span> <span class="var">continuar</span>.lower() == <span class="str">"s"</span>:
+    <span class="var">nombre</span> = <span class="fn">input</span>(<span class="str">"Nombre del estudiante: "</span>)
+    <span class="var">nota</span>   = <span class="fn">float</span>(<span class="fn">input</span>(<span class="str">"Nota (0-5): "</span>))
+
+    <span class="kw">if</span> <span class="var">nota</span> >= <span class="num">4.5</span>:
+        <span class="var">estado</span> = <span class="str">"Excelente 🏆"</span>
+    <span class="kw">elif</span> <span class="var">nota</span> >= <span class="num">3.0</span>:
+        <span class="var">estado</span> = <span class="str">"Aprobado ✅"</span>
+    <span class="kw">else</span>:
+        <span class="var">estado</span> = <span class="str">"Reprobado ❌"</span>
+
+    <span class="var">notas</span>.append({<span class="str">"nombre"</span>: <span class="var">nombre</span>, <span class="str">"nota"</span>: <span class="var">nota</span>, <span class="str">"estado"</span>: <span class="var">estado</span>})
+    <span class="var">continuar</span> = <span class="fn">input</span>(<span class="str">"¿Agregar otro? (s/n): "</span>)
+
+<span class="fn">print</span>(<span class="str">"\n--- RESULTADOS ---"</span>)
+<span class="kw">for</span> <span class="var">e</span> <span class="kw">in</span> <span class="var">notas</span>:
+    <span class="fn">print</span>(<span class="fn">f</span><span class="str">"{<span class="var">e</span>[<span class="str">'nombre'</span>]:<20} {<span class="var">e</span>[<span class="str">'nota'</span>]:.1f}  {<span class="var">e</span>[<span class="str">'estado'</span>]}"</span>)
+
+<span class="var">promedio</span> = <span class="fn">sum</span>(<span class="var">e</span>[<span class="str">"nota"</span>] <span class="kw">for</span> <span class="var">e</span> <span class="kw">in</span> <span class="var">notas</span>) / <span class="fn">len</span>(<span class="var">notas</span>)
+<span class="fn">print</span>(<span class="fn">f</span><span class="str">"\nPromedio del grupo: {<span class="var">promedio</span>:.2f}"</span>)</pre>
+
+  <div class="callout teal" style="margin-top:.8rem;">
+    <span>🎯</span>
+    <span>Reto: agrega un conteo de aprobados y reprobados al final.</span>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     SLIDE 20 — CIERRE
+══════════════════════════════════════════════ -->
+<div class="slide">
+  <div class="cover">
+    <h1 style="font-size:2.8rem;">¡Módulo 05 completado!</h1>
+    <p style="font-size:1.1rem; max-width:560px;">
+      Ya puedes hacer que tu programa <strong>decida</strong> y <strong>repita</strong> acciones de forma controlada.
+    </p>
+
+    <div style="display:flex; gap:1rem; flex-wrap:wrap; justify-content:center; margin:.5rem 0;">
+      <span class="badge-inline badge-green" style="font-size:.85rem; padding:.3em .8em;">if / elif / else</span>
+      <span class="badge-inline badge-teal" style="font-size:.85rem; padding:.3em .8em;">for + range()</span>
+      <span class="badge-inline badge-teal" style="font-size:.85rem; padding:.3em .8em;">while</span>
+      <span class="badge-inline badge-red" style="font-size:.85rem; padding:.3em .8em;">break</span>
+      <span class="badge-inline badge-orange" style="font-size:.85rem; padding:.3em .8em;">continue</span>
+      <span class="badge-inline badge-green" style="font-size:.85rem; padding:.3em .8em;">list comprehension</span>
+    </div>
+
+    <div class="card" style="max-width:500px; text-align:left;">
+      <h3 style="color:var(--teal); margin-bottom:.8rem;">Próxima clase</h3>
+      <p>Módulo 06 — <strong>Funciones</strong></p>
+      <ul style="margin-top:.5rem; color:var(--muted); font-size:.95rem;">
+        <li>def, return, parámetros</li>
+        <li>Funciones con *args y **kwargs</li>
+        <li>Funciones lambda</li>
+        <li>Scope y funciones puras</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+</div><!-- /slides-wrapper -->
+
+<script>
+  const STORAGE_KEY = 'slide_' + location.pathname;
+  const slides = document.querySelectorAll('.slide');
+  const total  = slides.length;
+  let current  = Math.min(parseInt(localStorage.getItem(STORAGE_KEY) || '0', 10), total - 1);
+
+  function updateUI() {
+    slides.forEach((s, i) => s.classList.toggle('active', i === current));
+    document.getElementById('counter').textContent  = `${current + 1} / ${total}`;
+    document.getElementById('progress').style.width = `${((current + 1) / total) * 100}%`;
+    document.getElementById('prevBtn').disabled = current === 0;
+    document.getElementById('nextBtn').disabled = current === total - 1;
+    localStorage.setItem(STORAGE_KEY, current);
+  }
+  function changeSlide(dir) {
+    const next = current + dir;
+    if (next >= 0 && next < total) { current = next; updateUI(); }
+  }
+  document.addEventListener('keydown', e => {
+    if (e.key === 'ArrowRight' || e.key === 'ArrowDown') changeSlide(1);
+    if (e.key === 'ArrowLeft'  || e.key === 'ArrowUp')   changeSlide(-1);
+  });
+  updateUI();
+</script>
+</body>
+</html>

@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Variables en Python</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    :root {
+      --bg: #0d1117; --surface: #161b22; --surface2: #21262d; --border: #30363d;
+      --text: #e6edf3; --muted: #8b949e;
+      --blue: #4d9de0; --gold: #b8a94a; --green: #3fb950;
+      --orange: #f0883e; --purple: #bc8cff; --red: #f85149; --teal: #39d353;
+    }
+    body { background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
+    .nav { background: var(--surface); border-bottom: 1px solid var(--border); padding: 10px 24px; display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; }
+    .nav-title { font-size: 13px; color: var(--muted); }
+    .nav-controls { display: flex; align-items: center; gap: 12px; }
+    .nav-counter { font-size: 13px; color: var(--muted); min-width: 60px; text-align: center; }
+    .btn { background: var(--surface2); border: 1px solid var(--border); color: var(--text); padding: 6px 16px; border-radius: 6px; cursor: pointer; font-size: 13px; transition: all 0.15s; }
+    .btn:hover { background: var(--border); } .btn:disabled { opacity: 0.3; cursor: not-allowed; }
+    .progress-bar { height: 3px; background: var(--border); flex-shrink: 0; }
+    .progress-fill { height: 100%; background: linear-gradient(90deg, var(--teal), var(--blue)); transition: width 0.3s ease; }
+    .slides-wrapper { flex: 1; overflow: hidden; position: relative; }
+    .slide { position: absolute; inset: 0; padding: 40px 60px; display: none; flex-direction: column; justify-content: center; overflow-y: auto; }
+    .slide.active { display: flex; }
+    .slide-title   { background: radial-gradient(ellipse at 40% 50%, #0d2318 0%, var(--bg) 70%); text-align: center; align-items: center; }
+    .slide-section { background: linear-gradient(135deg, #0d1117 0%, #161b22 100%); align-items: center; text-align: center; }
+    h1 { font-size: 3rem; font-weight: 800; line-height: 1.1; }
+    h2 { font-size: 1.8rem; font-weight: 700; margin-bottom: 24px; }
+    h3 { font-size: 1.05rem; font-weight: 600; margin-bottom: 8px; }
+    p  { font-size: 0.97rem; line-height: 1.7; color: var(--muted); }
+    .title-sub { font-size: 1.15rem; color: var(--muted); margin-top: 14px; }
+    .title-tag { display: inline-block; background: var(--surface2); border: 1px solid var(--border); color: var(--teal); padding: 6px 16px; border-radius: 20px; font-size: 0.82rem; margin-top: 20px; letter-spacing: 1px; text-transform: uppercase; }
+    .highlight { color: var(--blue); } .gold { color: var(--gold); } .green { color: var(--green); }
+    .orange { color: var(--orange); } .purple { color: var(--purple); } .red { color: var(--red); } .teal { color: var(--teal); }
+    .section-number { font-size: 5rem; font-weight: 900; color: var(--surface2); line-height: 1; }
+    .section-title  { font-size: 2.4rem; font-weight: 800; }
+    .section-desc   { font-size: 0.95rem; color: var(--muted); margin-top: 8px; }
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+    .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+    .card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 18px; }
+    .card-accent-blue   { border-left: 3px solid var(--blue); }
+    .card-accent-gold   { border-left: 3px solid var(--gold); }
+    .card-accent-green  { border-left: 3px solid var(--green); }
+    .card-accent-teal   { border-left: 3px solid var(--teal); }
+    .card-accent-orange { border-left: 3px solid var(--orange); }
+    pre { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 18px 20px; font-family: 'SF Mono','Fira Code',monospace; font-size: 0.9rem; line-height: 1.8; overflow-x: auto; }
+    .code-kw { color: #ff7b72; } .code-fn { color: #d2a8ff; } .code-str { color: #a5d6ff; }
+    .code-num { color: #79c0ff; } .code-cmt { color: #6e7681; font-style: italic; } .code-var { color: #ffa657; }
+    .code-bool { color: #56d364; }
+    ul.clean { list-style: none; display: flex; flex-direction: column; gap: 10px; }
+    ul.clean li { display: flex; align-items: flex-start; gap: 10px; font-size: 0.93rem; line-height: 1.5; }
+    ul.clean li::before { content: '▸'; color: var(--teal); flex-shrink: 0; margin-top: 1px; }
+    .callout        { background: #0d1f2e; border: 1px solid #1a3d5c; border-radius: 10px; padding: 14px 18px; font-size: 0.88rem; }
+    .callout-green  { background: #0d2318; border-color: #1a4d31; }
+    .callout-warn   { background: #2a1500; border-color: #6b3a00; }
+    .callout-red    { background: #2a0d0d; border-color: #6b1a1a; }
+    .callout-purple { background: #1a1030; border-color: #4a2d8a; }
+    table.clean { width: 100%; border-collapse: collapse; font-size: 0.87rem; }
+    table.clean th { background: var(--surface2); padding: 10px 14px; text-align: left; font-weight: 600; border-bottom: 2px solid var(--border); }
+    table.clean td { padding: 8px 14px; border-bottom: 1px solid var(--border); color: var(--muted); }
+    table.clean tr:last-child td { border-bottom: none; }
+    .badge { display: inline-block; background: var(--surface2); border: 1px solid var(--border); border-radius: 6px; padding: 2px 10px; font-family: 'SF Mono','Fira Code',monospace; font-size: 0.82rem; color: var(--text); }
+    .slide-header { display: flex; align-items: center; gap: 12px; margin-bottom: 24px; }
+    .slide-header-line { flex: 1; height: 1px; background: var(--border); }
+    .slide-header h2 { margin-bottom: 0; }
+    .ok  { color: var(--green); font-weight: 700; }
+    .no  { color: var(--red); font-weight: 700; }
+    .key-hint { position: fixed; bottom: 16px; right: 24px; font-size: 11px; color: var(--border); }
+  </style>
+</head>
+<body>
+
+<div class="nav">
+  <span class="nav-title">Python — Variables y Formateo de Strings</span>
+  <div class="nav-controls">
+    <button class="btn" id="prevBtn" onclick="changeSlide(-1)">← Anterior</button>
+    <span class="nav-counter" id="counter">1 / 1</span>
+    <button class="btn" id="nextBtn" onclick="changeSlide(1)">Siguiente →</button>
+  </div>
+</div>
+<div class="progress-bar"><div class="progress-fill" id="progress"></div></div>
+
+<div class="slides-wrapper">
+
+  <!-- 1. PORTADA -->
+  <div class="slide slide-title active">
+    <div style="font-size:4rem; margin-bottom:16px;">📦</div>
+    <h1>Variables en <span class="teal">Python</span></h1>
+    <p class="title-sub">Almacenar, nombrar y formatear datos en tus programas</p>
+    <span class="title-tag">Módulo 3 — Variables & Strings</span>
+  </div>
+
+  <!-- 2. QUÉ ES UNA VARIABLE -->
+  <div class="slide">
+    <div class="slide-header"><h2>¿Qué es una variable?</h2><div class="slide-header-line"></div></div>
+    <div class="grid-2">
+      <div style="display:flex; flex-direction:column; gap:16px;">
+        <p>Una variable es un <strong class="teal">contenedor con nombre</strong> que almacena un valor en memoria. En lugar de repetir el mismo valor en todo el código, le das un nombre y lo reutilizas.</p>
+        <div class="callout" style="font-size:0.95rem;">
+          Analogía: una variable es como una <strong class="gold">caja etiquetada</strong>. La etiqueta es el nombre, el contenido es el valor. Puedes abrir la caja, ver qué hay dentro, o cambiar el contenido.
+        </div>
+        <pre><span class="code-cmt"># Asignar un valor a una variable</span>
+<span class="code-var">nombre</span> = <span class="code-str">"Carlos"</span>     <span class="code-cmt"># str</span>
+<span class="code-var">edad</span>   = <span class="code-num">30</span>           <span class="code-cmt"># int</span>
+<span class="code-var">activo</span> = <span class="code-bool">True</span>         <span class="code-cmt"># bool</span>
+<span class="code-var">precio</span> = <span class="code-num">15000</span>        <span class="code-cmt"># int</span>
+
+<span class="code-cmt"># Usar la variable en cualquier parte del código</span>
+<span class="code-fn">print</span>(<span class="code-str">f"Hola <span class="code-var">{nombre}</span>, tienes <span class="code-var">{edad}</span> años"</span>)</pre>
+      </div>
+      <div style="display:flex; flex-direction:column; gap:14px;">
+        <p style="font-size:0.88rem; color:var(--muted);">Variables guardan cualquier tipo de dato:</p>
+        <pre style="font-size:0.83rem;"><span class="code-var">texto</span>        = <span class="code-str">"Hola"</span>       <span class="code-cmt"># str</span>
+<span class="code-var">numero</span>       = <span class="code-num">42</span>           <span class="code-cmt"># int</span>
+<span class="code-var">decimal</span>      = <span class="code-num">3.14</span>         <span class="code-cmt"># float</span>
+<span class="code-var">activo</span>       = <span class="code-bool">True</span>         <span class="code-cmt"># bool</span>
+<span class="code-var">lista</span>        = [<span class="code-num">1</span>, <span class="code-num">2</span>, <span class="code-num">3</span>]    <span class="code-cmt"># list</span>
+<span class="code-var">diccionario</span>  = {<span class="code-str">"a"</span>: <span class="code-num">1</span>}    <span class="code-cmt"># dict</span></pre>
+        <div class="callout-green callout">
+          Python detecta el tipo <strong class="green">automáticamente</strong> según el valor que asignas. No necesitas declarar <code>int x = 5</code> como en Java o C.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3. REGLAS DE NAMING -->
+  <div class="slide">
+    <div class="slide-header"><h2>Reglas para nombrar variables</h2><div class="slide-header-line"></div></div>
+    <div class="grid-2">
+      <div style="display:flex; flex-direction:column; gap:14px;">
+        <p>Python tiene reglas estrictas. Si las rompes, obtienes un error de sintaxis.</p>
+        <table class="clean">
+          <tr><th>Regla</th><th>Válido ✓</th><th>Inválido ✗</th></tr>
+          <tr><td>Solo letras, números y <code>_</code></td><td><code class="ok">mi_var</code></td><td><code class="no">mi-var</code></td></tr>
+          <tr><td>No empezar con número</td><td><code class="ok">var1</code></td><td><code class="no">1var</code></td></tr>
+          <tr><td>No usar espacios</td><td><code class="ok">mi_nombre</code></td><td><code class="no">mi nombre</code></td></tr>
+          <tr><td>No usar palabras reservadas</td><td><code class="ok">mi_list</code></td><td><code class="no">list</code>, <code class="no">for</code></td></tr>
+          <tr><td>Case-sensitive</td><td><code class="ok">edad</code> ≠ <code class="ok">Edad</code></td><td>—</td></tr>
+        </table>
+        <div class="callout-warn callout">
+          <strong style="color:var(--orange);">Palabras reservadas de Python:</strong><br/>
+          <code>if else elif for while def class return import True False None and or not in is lambda</code>
+        </div>
+      </div>
+      <div style="display:flex; flex-direction:column; gap:14px;">
+        <p style="font-size:0.88rem; color:var(--muted);">Convenciones de estilo — <strong class="blue">PEP 8</strong> (guía oficial):</p>
+        <div class="card card-accent-teal">
+          <h3 class="teal">snake_case — para variables y funciones</h3>
+          <pre style="padding:10px; margin-top:6px; font-size:0.85rem;"><span class="code-var">nombre_usuario</span> = <span class="code-str">"Ana"</span>
+<span class="code-var">total_ventas</span>   = <span class="code-num">5000</span>
+<span class="code-var">es_activo</span>      = <span class="code-bool">True</span></pre>
+        </div>
+        <div class="card card-accent-gold">
+          <h3 class="gold">MAYÚSCULAS — para constantes</h3>
+          <pre style="padding:10px; margin-top:6px; font-size:0.85rem;"><span class="code-var">PI</span>           = <span class="code-num">3.14159</span>
+<span class="code-var">MAX_INTENTOS</span> = <span class="code-num">3</span>
+<span class="code-var">VERSION</span>      = <span class="code-str">"1.0.0"</span></pre>
+        </div>
+        <div class="callout">
+          <strong>Nombres descriptivos siempre.</strong> <code class="no">x</code> no dice nada. <code class="ok">edad_usuario</code> sí.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 4. REASIGNACIÓN Y ASIGNACIÓN MÚLTIPLE -->
+  <div class="slide">
+    <div class="slide-header"><h2>Reasignación y asignación múltiple</h2><div class="slide-header-line"></div></div>
+    <div class="grid-2">
+      <div style="display:flex; flex-direction:column; gap:14px;">
+        <p>En Python puedes cambiar el valor de una variable en cualquier momento. Incluso puedes cambiarle el tipo.</p>
+        <pre><span class="code-cmt"># Reasignación — el valor cambia</span>
+<span class="code-var">contador</span> = <span class="code-num">0</span>
+<span class="code-fn">print</span>(<span class="code-var">contador</span>)   <span class="code-cmt"># 0</span>
+
+<span class="code-var">contador</span> = <span class="code-num">10</span>
+<span class="code-fn">print</span>(<span class="code-var">contador</span>)   <span class="code-cmt"># 10</span>
+
+<span class="code-var">contador</span> = <span class="code-var">contador</span> + <span class="code-num">1</span>
+<span class="code-fn">print</span>(<span class="code-var">contador</span>)   <span class="code-cmt"># 11</span>
+
+<span class="code-cmt"># Forma corta con operadores de asignación</span>
+<span class="code-var">contador</span> += <span class="code-num">5</span>    <span class="code-cmt"># contador = contador + 5 → 16</span>
+<span class="code-var">contador</span> *= <span class="code-num">2</span>    <span class="code-cmt"># contador = contador * 2 → 32</span></pre>
+      </div>
+      <div style="display:flex; flex-direction:column; gap:14px;">
+        <p style="font-size:0.88rem; color:var(--muted);">Asignación múltiple — varias variables en una línea:</p>
+        <pre><span class="code-cmt"># Asignar el mismo valor a varias variables</span>
+<span class="code-var">a</span> = <span class="code-var">b</span> = <span class="code-var">c</span> = <span class="code-num">0</span>
+
+<span class="code-cmt"># Asignar distintos valores en una línea</span>
+<span class="code-var">x</span>, <span class="code-var">y</span>, <span class="code-var">z</span> = <span class="code-num">1</span>, <span class="code-num">2</span>, <span class="code-num">3</span>
+<span class="code-fn">print</span>(<span class="code-var">x</span>, <span class="code-var">y</span>, <span class="code-var">z</span>)   <span class="code-cmt"># 1 2 3</span>
+
+<span class="code-cmt"># Intercambiar valores sin variable temporal</span>
+<span class="code-var">a</span>, <span class="code-var">b</span> = <span class="code-num">10</span>, <span class="code-num">20</span>
+<span class="code-var">a</span>, <span class="code-var">b</span> = <span class="code-var">b</span>, <span class="code-var">a</span>
+<span class="code-fn">print</span>(<span class="code-var">a</span>, <span class="code-var">b</span>)      <span class="code-cmt"># 20 10</span></pre>
+        <div class="callout-green callout">
+          El intercambio <code>a, b = b, a</code> es Python puro — en otros lenguajes necesitas una variable temporal.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 5. INPUT -->
+  <div class="slide">
+    <div class="slide-header"><h2>📥 input() — Variables desde el usuario</h2><div class="slide-header-line"></div></div>
+    <div class="grid-2">
+      <div style="display:flex; flex-direction:column; gap:16px;">
+        <p><code style="color:var(--blue);">input()</code> pausa el programa y espera que el usuario escriba algo. Lo que escribe queda guardado en una variable.</p>
+        <div style="display:flex; flex-direction:column; gap:10px;">
+          <div class="card" style="display:flex; gap:14px; align-items:flex-start; padding:14px;">
+            <span style="color:var(--teal); font-weight:900; font-size:1.1rem; flex-shrink:0;">1</span>
+            <div><h3 style="margin-bottom:2px;">Muestra un mensaje</h3><p>El texto dentro de los paréntesis aparece en pantalla como pregunta.</p></div>
+          </div>
+          <div class="card" style="display:flex; gap:14px; align-items:flex-start; padding:14px;">
+            <span style="color:var(--teal); font-weight:900; font-size:1.1rem; flex-shrink:0;">2</span>
+            <div><h3 style="margin-bottom:2px;">Espera al usuario</h3><p>El programa se detiene hasta que el usuario escribe y presiona Enter.</p></div>
+          </div>
+          <div class="card card-accent-orange" style="display:flex; gap:14px; align-items:flex-start; padding:14px;">
+            <span style="color:var(--orange); font-weight:900; font-size:1.1rem; flex-shrink:0;">3</span>
+            <div><h3 style="margin-bottom:2px; color:var(--orange);">Devuelve siempre str</h3><p>Sin importar qué escriba el usuario — siempre es texto. Debes convertirlo si necesitas otro tipo.</p></div>
+          </div>
+        </div>
+      </div>
+      <div style="display:flex; flex-direction:column; gap:14px;">
+        <pre><span class="code-cmt"># Básico</span>
+<span class="code-var">variable</span> = <span class="code-fn">input</span>(<span class="code-str">"Mensaje para el usuario: "</span>)
+
+<span class="code-cmt"># En la práctica</span>
+<span class="code-var">nombre</span> = <span class="code-fn">input</span>(<span class="code-str">"¿Cómo te llamas? "</span>)
+<span class="code-var">edad</span>   = <span class="code-fn">int</span>(<span class="code-fn">input</span>(<span class="code-str">"¿Cuántos años tienes? "</span>))
+<span class="code-var">precio</span> = <span class="code-fn">float</span>(<span class="code-fn">input</span>(<span class="code-str">"¿Cuánto cuesta? "</span>))
+
+<span class="code-fn">print</span>(<span class="code-str">f"Hola <span class="code-var">{nombre}</span>, tienes <span class="code-var">{edad}</span> años"</span>)</pre>
+        <div class="callout-warn callout">
+          <strong style="color:var(--orange);">⚠️ Error frecuente:</strong><br/>
+          <code style="color:var(--red);">edad = input("Edad: ")</code><br/>
+          <code style="color:var(--red);">print(edad + 1)</code> → <strong>TypeError</strong><br/>
+          <span style="font-size:0.83rem; color:var(--muted);">input() devuelve str. No puedes sumar str con int sin convertir.</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 6. SECTION: FORMATEO -->
+  <div class="slide slide-section">
+    <div class="section-number">02</div>
+    <div class="section-title">Formateo de <span class="teal">Strings</span></div>
+    <div class="section-desc">f-strings: la forma moderna de insertar variables en texto</div>
+  </div>
+
+  <!-- 7. F-STRINGS BÁSICO -->
+  <div class="slide">
+    <div class="slide-header"><h2>f-strings — Formateo moderno</h2><div class="slide-header-line"></div></div>
+    <div class="grid-2">
+      <div style="display:flex; flex-direction:column; gap:14px;">
+        <p>Un <strong class="teal">f-string</strong> es un string con la letra <code style="color:var(--teal); font-weight:900;">f</code> antes de las comillas. Dentro puedes insertar cualquier expresión Python entre <code style="color:var(--gold);">{ }</code>.</p>
+        <pre><span class="code-var">nombre</span> = <span class="code-str">"Ana"</span>
+<span class="code-var">edad</span>   = <span class="code-num">25</span>
+
+<span class="code-cmt"># f-string — forma recomendada desde Python 3.6+</span>
+<span class="code-fn">print</span>(<span class="code-str">f"Hola, mi nombre es <span class="code-var">{nombre}</span> y tengo <span class="code-var">{edad}</span> años."</span>)
+
+<span class="code-cmt"># Puedes poner expresiones directamente</span>
+<span class="code-fn">print</span>(<span class="code-str">f"El doble de tu edad: <span class="code-var">{edad * 2}</span>"</span>)
+<span class="code-fn">print</span>(<span class="code-str">f"Nombre en mayúsculas: <span class="code-var">{nombre.upper()}</span>"</span>)
+<span class="code-fn">print</span>(<span class="code-str">f"2 + 2 = <span class="code-var">{2 + 2}</span>"</span>)</pre>
+        <div class="callout-green callout">
+          Disponible desde <strong class="green">Python 3.6</strong>. Es la forma más legible, rápida y recomendada hoy. Úsala siempre.
+        </div>
+      </div>
+      <div style="display:flex; flex-direction:column; gap:14px;">
+        <p style="font-size:0.88rem; color:var(--muted);">Formas de formatear strings en Python (contexto histórico):</p>
+        <div class="card card-accent-teal">
+          <h3 class="teal">f-string — Python 3.6+ ✓ Usar</h3>
+          <pre style="padding:10px; font-size:0.83rem;"><span class="code-fn">print</span>(<span class="code-str">f"Hola <span class="code-var">{nombre}</span>"</span>)</pre>
+        </div>
+        <div class="card" style="opacity:0.7;">
+          <h3 style="color:var(--muted);">.format() — Versión anterior</h3>
+          <pre style="padding:10px; font-size:0.83rem;"><span class="code-fn">print</span>(<span class="code-str">"Hola {}"</span>.<span class="code-fn">format</span>(<span class="code-var">nombre</span>))</pre>
+        </div>
+        <div class="card" style="opacity:0.5;">
+          <h3 style="color:var(--muted);">% — Versión antigua</h3>
+          <pre style="padding:10px; font-size:0.83rem;"><span class="code-fn">print</span>(<span class="code-str">"Hola %s"</span> % <span class="code-var">nombre</span>)</pre>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 8. F-STRINGS AVANZADO -->
+  <div class="slide">
+    <div class="slide-header"><h2>f-strings — Formateo avanzado</h2><div class="slide-header-line"></div></div>
+    <div class="grid-2">
+      <div style="display:flex; flex-direction:column; gap:14px;">
+        <p style="font-size:0.88rem; color:var(--muted);">Dentro de <code>{ }</code> puedes controlar cómo se muestra el valor con <code style="color:var(--gold);">:{especificador}</code></p>
+        <pre><span class="code-var">pi</span>      = <span class="code-num">3.14159265</span>
+<span class="code-var">numero</span>  = <span class="code-num">1234567.89</span>
+<span class="code-var">nombre</span>  = <span class="code-str">"Ana"</span>
+
+<span class="code-cmt"># Limitar decimales</span>
+<span class="code-fn">print</span>(<span class="code-str">f"Pi: <span class="code-var">{pi:.2f}</span>"</span>)        <span class="code-cmt"># Pi: 3.14</span>
+<span class="code-fn">print</span>(<span class="code-str">f"Pi: <span class="code-var">{pi:.4f}</span>"</span>)        <span class="code-cmt"># Pi: 3.1416</span>
+
+<span class="code-cmt"># Número con separador de miles</span>
+<span class="code-fn">print</span>(<span class="code-str">f"<span class="code-var">{numero:,.2f}</span>"</span>)       <span class="code-cmt"># 1,234,567.89</span>
+
+<span class="code-cmt"># Rellenar con ceros</span>
+<span class="code-fn">print</span>(<span class="code-str">f"<span class="code-var">{42:05d}</span>"</span>)           <span class="code-cmt"># 00042</span></pre>
+      </div>
+      <div style="display:flex; flex-direction:column; gap:14px;">
+        <pre><span class="code-cmt"># Alinear texto en columnas</span>
+<span class="code-fn">print</span>(<span class="code-str">f"|<span class="code-var">{'Hola':&lt;10}</span>|"</span>)       <span class="code-cmt"># |Hola      |  izquierda</span>
+<span class="code-fn">print</span>(<span class="code-str">f"|<span class="code-var">{'Mundo':&gt;10}</span>|"</span>)      <span class="code-cmt"># |     Mundo|  derecha</span>
+<span class="code-fn">print</span>(<span class="code-str">f"|<span class="code-var">{'Centro':^10}</span>|"</span>)     <span class="code-cmt"># |  Centro  |  centrado</span>
+
+<span class="code-cmt"># Porcentajes</span>
+<span class="code-var">tasa</span> = <span class="code-num">0.1975</span>
+<span class="code-fn">print</span>(<span class="code-str">f"Tasa: <span class="code-var">{tasa:.1%}</span>"</span>)      <span class="code-cmt"># Tasa: 19.8%</span></pre>
+        <table class="clean" style="margin-top:4px;">
+          <tr><th>Especificador</th><th>Significado</th><th>Ejemplo</th></tr>
+          <tr><td><code>.2f</code></td><td>2 decimales float</td><td><code>3.14</code></td></tr>
+          <tr><td><code>,</code></td><td>Separador de miles</td><td><code>1,000</code></td></tr>
+          <tr><td><code>05d</code></td><td>Rellenar con ceros</td><td><code>00042</code></td></tr>
+          <tr><td><code>&lt;10</code></td><td>Alinear izquierda</td><td><code>Ana       </code></td></tr>
+          <tr><td><code>.1%</code></td><td>Porcentaje</td><td><code>19.8%</code></td></tr>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- 9. SCOPE — ALCANCE DE VARIABLES -->
+  <div class="slide">
+    <div class="slide-header"><h2>🔭 Alcance de variables (Scope)</h2><div class="slide-header-line"></div></div>
+    <div class="grid-2">
+      <div style="display:flex; flex-direction:column; gap:14px;">
+        <p>El <strong class="teal">scope</strong> determina desde dónde se puede acceder a una variable. En Python hay dos ámbitos principales.</p>
+        <div class="card card-accent-teal">
+          <h3 class="teal">Variable Global</h3>
+          <p>Definida fuera de cualquier función. Accesible desde cualquier parte del programa.</p>
+          <pre style="margin-top:8px; padding:10px; font-size:0.83rem;"><span class="code-var">mensaje</span> = <span class="code-str">"Hola"</span>   <span class="code-cmt"># global</span>
+
+<span class="code-kw">def</span> <span class="code-fn">saludar</span>():
+    <span class="code-fn">print</span>(<span class="code-var">mensaje</span>)  <span class="code-cmt"># ✓ accede</span>
+
+<span class="code-fn">saludar</span>()           <span class="code-cmt"># Hola</span></pre>
+        </div>
+      </div>
+      <div style="display:flex; flex-direction:column; gap:14px;">
+        <div class="card card-accent-orange">
+          <h3 class="orange">Variable Local</h3>
+          <p>Definida dentro de una función. Solo existe dentro de esa función.</p>
+          <pre style="margin-top:8px; padding:10px; font-size:0.83rem;"><span class="code-kw">def</span> <span class="code-fn">calcular</span>():
+    <span class="code-var">resultado</span> = <span class="code-num">42</span>   <span class="code-cmt"># local</span>
+    <span class="code-fn">print</span>(<span class="code-var">resultado</span>) <span class="code-cmt"># ✓</span>
+
+<span class="code-fn">calcular</span>()
+<span class="code-fn">print</span>(<span class="code-var">resultado</span>)      <span class="code-cmt"># ✗ NameError</span></pre>
+        </div>
+        <div class="callout-warn callout">
+          <strong style="color:var(--orange);">Regla general:</strong> Define variables en el scope más pequeño que las necesites. Variables globales en exceso hacen el código difícil de entender.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 10. ACTIVIDAD -->
+  <div class="slide">
+    <div class="slide-header"><h2>💻 Actividad — Tarjeta de presentación</h2><div class="slide-header-line"></div></div>
+    <div class="grid-2">
+      <div style="display:flex; flex-direction:column; gap:14px;">
+        <div class="callout-green callout">
+          <strong class="green">Objetivo:</strong> Usar variables, input() y f-strings con formateo para generar una tarjeta de presentación automática.
+        </div>
+        <ul class="clean">
+          <li>Pide al usuario: nombre, edad, profesión, salario mensual</li>
+          <li>Guarda cada dato en su variable con nombre descriptivo</li>
+          <li>Calcula: salario anual, salario diario (÷30), años para jubilarse a los 65</li>
+          <li>Imprime una tarjeta formateada usando f-strings</li>
+          <li>El salario debe mostrarse con separador de miles y 2 decimales</li>
+        </ul>
+        <div class="callout">
+          <strong>Reto extra:</strong> Agrega el nombre centrado en 30 caracteres y en mayúsculas usando f-string con especificador de alineación.
+        </div>
+      </div>
+      <pre><span class="code-cmt"># Código base — completa los ___</span>
+
+<span class="code-var">nombre</span>    = <span class="code-fn">input</span>(<span class="code-str">"Nombre: "</span>)
+<span class="code-var">edad</span>      = <span class="code-fn">int</span>(<span class="code-fn">input</span>(<span class="code-str">"Edad: "</span>))
+<span class="code-var">profesion</span> = <span class="code-fn">input</span>(<span class="code-str">"Profesión: "</span>)
+<span class="code-var">salario</span>   = <span class="code-fn">float</span>(<span class="code-fn">input</span>(<span class="code-str">"Salario mensual: "</span>))
+
+<span class="code-var">salario_anual</span>  = ___
+<span class="code-var">salario_diario</span> = ___
+<span class="code-var">años_jubilarse</span> = ___
+
+<span class="code-fn">print</span>(<span class="code-str">"\n" + "=" * 40</span>)
+<span class="code-fn">print</span>(<span class="code-str">f"  <span class="code-var">{nombre.upper():^36}</span>"</span>)
+<span class="code-fn">print</span>(<span class="code-str">"=" * 40</span>)
+<span class="code-fn">print</span>(<span class="code-str">f"  Profesión : <span class="code-var">{profesion}</span>"</span>)
+<span class="code-fn">print</span>(<span class="code-str">f"  Edad      : <span class="code-var">{edad}</span> años"</span>)
+<span class="code-fn">print</span>(<span class="code-str">f"  Jubilación: en <span class="code-var">{___}</span> años"</span>)
+<span class="code-fn">print</span>(<span class="code-str">f"  Salario/mes: $<span class="code-var">{salario:,.2f}</span>"</span>)
+<span class="code-fn">print</span>(<span class="code-str">f"  Salario/año: $<span class="code-var">{___:,.2f}</span>"</span>)
+<span class="code-fn">print</span>(<span class="code-str">f"  Salario/día: $<span class="code-var">{___:,.2f}</span>"</span>)
+<span class="code-fn">print</span>(<span class="code-str">"=" * 40</span>)</pre>
+    </div>
+  </div>
+
+  <!-- 11. CIERRE -->
+  <div class="slide slide-title">
+    <div style="font-size:3.5rem; margin-bottom:16px;">📦</div>
+    <h1>¿Preguntas?</h1>
+    <p class="title-sub" style="max-width:560px; text-align:center; margin-top:12px;">
+      Próxima clase: <span class="teal">Estructuras de Control</span><br/>
+      <span style="font-size:0.92rem;">if / elif / else — for — while</span>
+    </p>
+    <div style="display:flex; gap:12px; margin-top:24px; flex-wrap:wrap; justify-content:center;">
+      <div class="callout" style="font-size:0.83rem; padding:10px 16px;">📌 Tarea: Completar actividad tarjeta de presentación</div>
+      <div class="callout" style="font-size:0.83rem; padding:10px 16px;">💡 Practicar f-strings con distintos especificadores</div>
+    </div>
+    <span class="title-tag" style="margin-top:20px;">Módulo 3 — Completado</span>
+  </div>
+
+</div>
+<div class="key-hint">← → para navegar</div>
+
+<script>
+  const STORAGE_KEY = 'slide_' + location.pathname;
+  const slides = document.querySelectorAll('.slide');
+  const total  = slides.length;
+  let current  = Math.min(parseInt(localStorage.getItem(STORAGE_KEY) || '0', 10), total - 1);
+
+  function updateUI() {
+    slides.forEach((s, i) => s.classList.toggle('active', i === current));
+    document.getElementById('counter').textContent  = `${current + 1} / ${total}`;
+    document.getElementById('progress').style.width = `${((current + 1) / total) * 100}%`;
+    document.getElementById('prevBtn').disabled = current === 0;
+    document.getElementById('nextBtn').disabled = current === total - 1;
+    localStorage.setItem(STORAGE_KEY, current);
+  }
+
+  function changeSlide(dir) {
+    const next = current + dir;
+    if (next >= 0 && next < total) { current = next; updateUI(); }
+  }
+
+  document.addEventListener('keydown', e => {
+    if (e.key === 'ArrowRight' || e.key === 'ArrowDown') changeSlide(1);
+    if (e.key === 'ArrowLeft'  || e.key === 'ArrowUp')   changeSlide(-1);
+  });
+
+  updateUI();
+</script>
+</body>
+</html>

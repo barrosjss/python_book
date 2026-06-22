@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Python Book — Del Diagrama al Código</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --bg: #0d1117;
+      --surface: #161b22;
+      --surface2: #21262d;
+      --border: #30363d;
+      --text: #e6edf3;
+      --muted: #8b949e;
+      --blue: #4d9de0;
+      --gold: #b8a94a;
+      --green: #3fb950;
+      --orange: #f0883e;
+      --purple: #bc8cff;
+      --red: #f85149;
+      --teal: #39d353;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      line-height: 1.6;
+      min-height: 100vh;
+    }
+
+    /* ── HERO ── */
+    .hero {
+      background: radial-gradient(ellipse at 30% 40%, #1a2744 0%, var(--bg) 65%);
+      border-bottom: 1px solid var(--border);
+      padding: 64px 24px 56px;
+      text-align: center;
+    }
+    .hero-badge {
+      display: inline-block;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      color: var(--gold);
+      font-size: 0.75rem;
+      font-weight: 700;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      padding: 6px 16px;
+      border-radius: 20px;
+      margin-bottom: 20px;
+    }
+    .hero h1 {
+      font-size: clamp(2rem, 5vw, 3.2rem);
+      font-weight: 800;
+      line-height: 1.1;
+      margin-bottom: 16px;
+    }
+    .hero h1 span { color: var(--blue); }
+    .hero-quote {
+      font-size: 1.05rem;
+      color: var(--muted);
+      max-width: 560px;
+      margin: 0 auto 28px;
+      font-style: italic;
+    }
+    .hero-links {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+    .hero-links a {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      color: var(--text);
+      text-decoration: none;
+      padding: 8px 18px;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      transition: background 0.15s, border-color 0.15s;
+    }
+    .hero-links a:hover { background: var(--border); border-color: var(--blue); }
+    .hero-links a.primary {
+      background: linear-gradient(135deg, #1a3a5c, #1a2744);
+      border-color: var(--blue);
+      color: var(--blue);
+    }
+    .hero-links a.primary:hover { background: #1e4068; }
+
+    /* ── LAYOUT ── */
+    .container {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 48px 24px 64px;
+    }
+    .section-label {
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 20px;
+    }
+
+    /* ── MODULE CARDS ── */
+    .modules { display: flex; flex-direction: column; gap: 14px; }
+
+    .module-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px 24px;
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      gap: 20px;
+      align-items: center;
+      transition: border-color 0.15s, transform 0.15s;
+      text-decoration: none;
+      color: inherit;
+    }
+    a.module-card:hover {
+      border-color: var(--blue);
+      transform: translateY(-1px);
+    }
+    .module-card.disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+      pointer-events: none;
+    }
+
+    .module-num {
+      width: 44px;
+      height: 44px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.1rem;
+      font-weight: 800;
+      flex-shrink: 0;
+    }
+    .module-num.n1 { background: #1a2744; color: var(--blue); }
+    .module-num.n2 { background: #1e1230; color: var(--purple); }
+    .module-num.n3 { background: #0d2318; color: var(--teal); }
+    .module-num.n4 { background: #1e1505; color: var(--gold); }
+    .module-num.n5 { background: #0d2318; color: var(--green); }
+    .module-num.n6 { background: #1e1a3a; color: var(--purple); }
+    .module-num.n7 { background: #0d2a28; color: var(--teal); }
+
+    .module-info h2 {
+      font-size: 1.05rem;
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+    .module-info p {
+      font-size: 0.87rem;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+    .module-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 8px;
+    }
+    .tag {
+      font-size: 0.72rem;
+      font-family: 'SF Mono', 'Fira Code', monospace;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      color: var(--muted);
+      padding: 2px 8px;
+      border-radius: 4px;
+    }
+
+    .module-arrow {
+      font-size: 1.2rem;
+      color: var(--muted);
+      flex-shrink: 0;
+      transition: color 0.15s, transform 0.15s;
+    }
+    a.module-card:hover .module-arrow { color: var(--blue); transform: translateX(3px); }
+
+    .status {
+      font-size: 0.72rem;
+      font-weight: 700;
+      padding: 3px 10px;
+      border-radius: 20px;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      flex-shrink: 0;
+    }
+    .status.ready  { background: #0d2318; color: var(--green); border: 1px solid #1a4d31; }
+    .status.soon   { background: #2a1500; color: var(--orange); border: 1px solid #6b3a00; }
+
+    /* ── ACTIVITY LINKS ── */
+    .activity-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 10px;
+    }
+    .activity-link {
+      font-size: 0.78rem;
+      color: var(--blue);
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .activity-link:hover { text-decoration: underline; }
+
+    /* ── CARD WRAPPER (non-link cards with sub-links) ── */
+    .module-wrapper {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+    .module-wrapper .module-card {
+      border: none;
+      border-radius: 0;
+    }
+    .module-wrapper .module-card:hover { transform: none; }
+    .module-extras {
+      border-top: 1px solid var(--border);
+      padding: 10px 24px 14px 88px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 14px;
+    }
+
+    /* ── FOOTER ── */
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 28px 24px;
+      text-align: center;
+      font-size: 0.85rem;
+      color: var(--muted);
+    }
+    footer strong { color: var(--text); }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 600px) {
+      .module-card {
+        grid-template-columns: auto 1fr;
+        gap: 14px;
+      }
+      .module-arrow, .status { display: none; }
+      .module-extras { padding-left: 24px; }
+    }
+  </style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-badge">🐍 Python Book</div>
+  <h1>Del Diagrama al <span>Código</span></h1>
+  <p class="hero-quote">"La lógica es el plano, Python es la construcción."</p>
+  <div class="hero-links">
+    <a href="https://github.com/barrosjss/logica-de-programacion" target="_blank" rel="noopener">
+      ↗ Curso de Lógica
+    </a>
+    <a href="README.md" class="primary">
+      📄 README del repositorio
+    </a>
+  </div>
+</header>
+
+<main class="container">
+
+  <p class="section-label">Fundamentos</p>
+  <div class="modules">
+
+    <div class="module-wrapper">
+      <a class="module-card" href="01-Fundamentos-Python/presentacion.html">
+        <div class="module-num n1">01</div>
+        <div class="module-info">
+          <h2>Fundamentos de Python</h2>
+          <p>Instalación, configuración del entorno y tu primer <code>print("Hola Mundo")</code>.</p>
+          <div class="module-tags">
+            <span class="tag">setup</span>
+            <span class="tag">print()</span>
+            <span class="tag">terminal</span>
+          </div>
+        </div>
+        <span class="status ready">Listo</span>
+        <span class="module-arrow">→</span>
+      </a>
+      <div class="module-extras">
+        <a class="activity-link" href="01-Fundamentos-Python/actividades/actividad_primer_programa.md">📝 Actividad: Mi primer programa</a>
+      </div>
+    </div>
+
+    <div class="module-wrapper">
+      <a class="module-card" href="02-Datos-Primitivos/presentacion.html">
+        <div class="module-num n2">02</div>
+        <div class="module-info">
+          <h2>Datos Primitivos</h2>
+          <p>Tipos <code>int</code>, <code>float</code>, <code>str</code> y <code>bool</code>. Operadores y conversión de tipos.</p>
+          <div class="module-tags">
+            <span class="tag">int</span>
+            <span class="tag">float</span>
+            <span class="tag">str</span>
+            <span class="tag">bool</span>
+          </div>
+        </div>
+        <span class="status ready">Listo</span>
+        <span class="module-arrow">→</span>
+      </a>
+      <div class="module-extras">
+        <a class="activity-link" href="02-Datos-Primitivos/actividades/actividad_tipos.md">📝 Actividad: Tipos en acción</a>
+      </div>
+    </div>
+
+    <div class="module-wrapper">
+      <a class="module-card" href="03-Variables/presentacion.html">
+        <div class="module-num n3">03</div>
+        <div class="module-info">
+          <h2>Variables y Strings</h2>
+          <p>Asignación, <code>input()</code>, f-strings y formateo de salida.</p>
+          <div class="module-tags">
+            <span class="tag">variables</span>
+            <span class="tag">input()</span>
+            <span class="tag">f-strings</span>
+          </div>
+        </div>
+        <span class="status ready">Listo</span>
+        <span class="module-arrow">→</span>
+      </a>
+      <div class="module-extras">
+        <a class="activity-link" href="03-Variables/actividades/actividad_tarjeta.md">📝 Actividad: Tarjeta de presentación</a>
+      </div>
+    </div>
+
+    <div class="module-wrapper">
+      <a class="module-card" href="04-Estructuras-de-Datos/presentacion.html">
+        <div class="module-num n4">04</div>
+        <div class="module-info">
+          <h2>Estructuras de Datos</h2>
+          <p>Listas, tuplas, diccionarios y conjuntos. Índices, métodos y recorridos con <code>for</code>.</p>
+          <div class="module-tags">
+            <span class="tag">list</span>
+            <span class="tag">tuple</span>
+            <span class="tag">dict</span>
+            <span class="tag">set</span>
+          </div>
+        </div>
+        <span class="status ready">Listo</span>
+        <span class="module-arrow">→</span>
+      </a>
+      <div class="module-extras">
+        <a class="activity-link" href="04-Estructuras-de-Datos/actividades/actividad_listas.md">📝 Listas en Python</a>
+        <a class="activity-link" href="04-Estructuras-de-Datos/actividades/actividad_agenda.md">📝 Agenda de contactos</a>
+      </div>
+    </div>
+
+    <div class="module-wrapper">
+      <a class="module-card" href="05-Sentencias-de-Control/presentacion.html">
+        <div class="module-num n5">05</div>
+        <div class="module-info">
+          <h2>Sentencias de Control</h2>
+          <p>Condicionales <code>if/elif/else</code> y bucles <code>while</code> y <code>for</code>.</p>
+          <div class="module-tags">
+            <span class="tag">if</span>
+            <span class="tag">while</span>
+            <span class="tag">for</span>
+          </div>
+        </div>
+        <span class="status ready">Listo</span>
+        <span class="module-arrow">→</span>
+      </a>
+      <div class="module-extras">
+        <a class="activity-link" href="05-Sentencias-de-Control/actividades/actividad_calificaciones.md">📝 Actividad: Sistema de calificaciones</a>
+      </div>
+    </div>
+
+    <div class="module-card disabled">
+      <div class="module-num n5" style="background:#2a1500;color:var(--orange);">06</div>
+      <div class="module-info">
+        <h2>Funciones</h2>
+        <p>Modularización, parámetros, <code>return</code> y docstrings.</p>
+        <div class="module-tags">
+          <span class="tag">def</span>
+          <span class="tag">return</span>
+          <span class="tag">docstring</span>
+        </div>
+      </div>
+      <span class="status soon">Próximamente</span>
+    </div>
+
+  </div>
+
+  <p class="section-label" style="margin-top:48px;">Avanzado</p>
+  <div class="modules">
+
+    <div class="module-wrapper">
+      <a class="module-card" href="06-HTTP-Requests-Streamlit/index.html">
+        <div class="module-num n6">07</div>
+        <div class="module-info">
+          <h2>HTTP, APIs y Streamlit</h2>
+          <p>Peticiones con <code>requests</code>, consumo de APIs REST y dashboards interactivos.</p>
+          <div class="module-tags">
+            <span class="tag">HTTP</span>
+            <span class="tag">requests</span>
+            <span class="tag">Streamlit</span>
+          </div>
+        </div>
+        <span class="status ready">Listo</span>
+        <span class="module-arrow">→</span>
+      </a>
+      <div class="module-extras">
+        <a class="activity-link" href="06-HTTP-Requests-Streamlit/README.md">📚 Apuntes del profe</a>
+      </div>
+    </div>
+
+    <div class="module-wrapper">
+      <a class="module-card" href="07-FastAPI/index.html">
+        <div class="module-num n7">08</div>
+        <div class="module-info">
+          <h2>Introducción a FastAPI</h2>
+          <p>Construcción de APIs con FastAPI, rutas, validación y servidor Uvicorn.</p>
+          <div class="module-tags">
+            <span class="tag">FastAPI</span>
+            <span class="tag">Uvicorn</span>
+            <span class="tag">REST</span>
+          </div>
+        </div>
+        <span class="status ready">Listo</span>
+        <span class="module-arrow">→</span>
+      </a>
+      <div class="module-extras">
+        <a class="activity-link" href="07-FastAPI/README.md">📚 Apuntes del profe</a>
+      </div>
+    </div>
+
+  </div>
+
+</main>
+
+<footer>
+  Desarrollado para estudiantes que buscan pasar de la teoría a la creación real.<br>
+  Por <strong>Jesus Barros</strong> · 2026
+</footer>
+
+</body>
+</html>

@@ -28,7 +28,7 @@ body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--t
   position:absolute;inset:0;
   display:none;flex-direction:column;justify-content:center;align-items:center;
   padding:56px 80px 90px;
-  overflow-y:auto;
+  overflow:hidden;
   animation:fadeIn .35s ease;
 }
 .slide.active{display:flex}
@@ -187,9 +187,21 @@ h4{font-size:1rem;font-weight:600;margin:.6rem 0 .35rem}
 p{margin-bottom:.6rem}
 ul,ol{padding-left:1.4rem;margin-bottom:.6rem}
 li{margin-bottom:.3rem;font-size:.9rem}
+html{height:100%;overflow:hidden}
+.portrait-block{display:none;position:fixed;inset:0;z-index:99999;background:var(--bg);flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:2rem;gap:1rem}
+.portrait-block .rotate-icon{font-size:4rem;line-height:1}
+.portrait-block h2{font-size:1.5rem;font-weight:800}
+.portrait-block p{font-size:1rem;color:var(--muted);line-height:1.6;max-width:340px}
+@media screen and (orientation: portrait),screen and (max-aspect-ratio:1/1){.portrait-block{display:flex}body>*:not(.portrait-block){visibility:hidden;pointer-events:none}}
 </style>
 </head>
 <body>
+
+<div class="portrait-block" role="alert">
+  <div class="rotate-icon">🔄</div>
+  <h2>Gira tu dispositivo</h2>
+  <p>Esta presentación solo se ve en modo horizontal.<br>Rota la pantalla o amplía la ventana del navegador.</p>
+</div>
 
 <div id="progress-bar"><div id="progress-fill"></div></div>
 <div id="counter">1 / 30</div>

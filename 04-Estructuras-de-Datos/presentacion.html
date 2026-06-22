@@ -22,7 +22,7 @@
     .progress-bar { height: 3px; background: var(--border); flex-shrink: 0; }
     .progress-fill { height: 100%; background: linear-gradient(90deg, var(--orange), var(--gold)); transition: width 0.3s; }
     .slides-wrapper { flex: 1; overflow: hidden; position: relative; }
-    .slide { position: absolute; inset: 0; padding: 36px 56px; display: none; flex-direction: column; justify-content: center; overflow-y: auto; }
+    .slide { position: absolute; inset: 0; padding: 36px 56px; display: none; flex-direction: column; justify-content: center; overflow: hidden; }
     .slide.active { display: flex; }
     .slide-title   { background: radial-gradient(ellipse at 40% 50%, #1e1505 0%, var(--bg) 70%); text-align: center; align-items: center; }
     .slide-section { background: linear-gradient(135deg, #0d1117 0%, #161b22 100%); align-items: center; text-align: center; }
@@ -71,9 +71,24 @@
 
     /* Structure pills for overview */
     .struct-pill { border-radius: 12px; padding: 20px; text-align: center; }
+    html { height: 100%; overflow: hidden; }
+    .portrait-block { display: none; position: fixed; inset: 0; z-index: 99999; background: var(--bg); flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 2rem; gap: 1rem; }
+    .portrait-block .rotate-icon { font-size: 4rem; line-height: 1; }
+    .portrait-block h2 { font-size: 1.5rem; font-weight: 800; }
+    .portrait-block p { font-size: 1rem; color: var(--muted); line-height: 1.6; max-width: 340px; }
+    @media screen and (orientation: portrait), screen and (max-aspect-ratio: 1/1) {
+      .portrait-block { display: flex; }
+      body > *:not(.portrait-block) { visibility: hidden; pointer-events: none; }
+    }
   </style>
 </head>
 <body>
+
+<div class="portrait-block" role="alert">
+  <div class="rotate-icon">🔄</div>
+  <h2>Gira tu dispositivo</h2>
+  <p>Esta presentación solo se ve en modo horizontal.<br>Rota la pantalla o amplía la ventana del navegador.</p>
+</div>
 
 <div class="nav">
   <span class="nav-title">Python — Estructuras de Datos</span>

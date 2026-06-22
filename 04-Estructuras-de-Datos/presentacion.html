@@ -1,0 +1,598 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Estructuras de Datos en Python</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    :root {
+      --bg: #0d1117; --surface: #161b22; --surface2: #21262d; --border: #30363d;
+      --text: #e6edf3; --muted: #8b949e;
+      --blue: #4d9de0; --gold: #b8a94a; --green: #3fb950;
+      --orange: #f0883e; --purple: #bc8cff; --red: #f85149; --teal: #39d353;
+    }
+    body { background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
+    .nav { background: var(--surface); border-bottom: 1px solid var(--border); padding: 10px 24px; display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; }
+    .nav-title { font-size: 13px; color: var(--muted); }
+    .nav-controls { display: flex; align-items: center; gap: 12px; }
+    .nav-counter { font-size: 13px; color: var(--muted); min-width: 60px; text-align: center; }
+    .btn { background: var(--surface2); border: 1px solid var(--border); color: var(--text); padding: 6px 16px; border-radius: 6px; cursor: pointer; font-size: 13px; transition: background 0.15s; }
+    .btn:hover { background: var(--border); } .btn:disabled { opacity: 0.3; cursor: not-allowed; }
+    .progress-bar { height: 3px; background: var(--border); flex-shrink: 0; }
+    .progress-fill { height: 100%; background: linear-gradient(90deg, var(--orange), var(--gold)); transition: width 0.3s; }
+    .slides-wrapper { flex: 1; overflow: hidden; position: relative; }
+    .slide { position: absolute; inset: 0; padding: 36px 56px; display: none; flex-direction: column; justify-content: center; overflow-y: auto; }
+    .slide.active { display: flex; }
+    .slide-title   { background: radial-gradient(ellipse at 40% 50%, #1e1505 0%, var(--bg) 70%); text-align: center; align-items: center; }
+    .slide-section { background: linear-gradient(135deg, #0d1117 0%, #161b22 100%); align-items: center; text-align: center; }
+    h1 { font-size: 3rem; font-weight: 800; line-height: 1.1; }
+    h2 { font-size: 1.75rem; font-weight: 700; margin-bottom: 22px; }
+    h3 { font-size: 1rem; font-weight: 600; margin-bottom: 8px; }
+    p  { font-size: 0.95rem; line-height: 1.7; color: var(--muted); }
+    .title-sub { font-size: 1.1rem; color: var(--muted); margin-top: 14px; }
+    .title-tag { display: inline-block; background: var(--surface2); border: 1px solid var(--border); color: var(--gold); padding: 6px 16px; border-radius: 20px; font-size: 0.82rem; margin-top: 20px; letter-spacing: 1px; text-transform: uppercase; }
+    .highlight { color: var(--blue); } .gold { color: var(--gold); } .green { color: var(--green); }
+    .orange { color: var(--orange); } .purple { color: var(--purple); } .red { color: var(--red); } .teal { color: var(--teal); }
+    .section-number { font-size: 5rem; font-weight: 900; color: var(--surface2); line-height: 1; }
+    .section-title  { font-size: 2.3rem; font-weight: 800; }
+    .section-desc   { font-size: 0.93rem; color: var(--muted); margin-top: 8px; }
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+    .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; }
+    .grid-4 { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 14px; }
+    .card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 16px; }
+    .card-accent-blue   { border-left: 3px solid var(--blue); }
+    .card-accent-gold   { border-left: 3px solid var(--gold); }
+    .card-accent-green  { border-left: 3px solid var(--green); }
+    .card-accent-orange { border-left: 3px solid var(--orange); }
+    .card-accent-purple { border-left: 3px solid var(--purple); }
+    pre { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 16px 18px; font-family: 'SF Mono','Fira Code',monospace; font-size: 0.87rem; line-height: 1.8; overflow-x: auto; }
+    .code-kw { color: #ff7b72; } .code-fn { color: #d2a8ff; } .code-str { color: #a5d6ff; }
+    .code-num { color: #79c0ff; } .code-cmt { color: #6e7681; font-style: italic; } .code-var { color: #ffa657; }
+    .code-bool { color: #56d364; }
+    ul.clean { list-style: none; display: flex; flex-direction: column; gap: 8px; }
+    ul.clean li { display: flex; align-items: flex-start; gap: 10px; font-size: 0.9rem; line-height: 1.5; }
+    ul.clean li::before { content: '▸'; color: var(--gold); flex-shrink: 0; margin-top: 1px; }
+    .callout        { background: #1e1505; border: 1px solid #4a3200; border-radius: 10px; padding: 12px 16px; font-size: 0.87rem; }
+    .callout-green  { background: #0d2318; border-color: #1a4d31; }
+    .callout-warn   { background: #2a1500; border-color: #6b3a00; }
+    .callout-red    { background: #2a0d0d; border-color: #6b1a1a; }
+    .callout-blue   { background: #0d1f2e; border-color: #1a3d5c; }
+    table.clean { width: 100%; border-collapse: collapse; font-size: 0.84rem; }
+    table.clean th { background: var(--surface2); padding: 9px 12px; text-align: left; font-weight: 600; border-bottom: 2px solid var(--border); }
+    table.clean td { padding: 7px 12px; border-bottom: 1px solid var(--border); color: var(--muted); }
+    table.clean tr:last-child td { border-bottom: none; }
+    .badge { display: inline-block; background: var(--surface2); border: 1px solid var(--border); border-radius: 5px; padding: 2px 9px; font-family: 'SF Mono','Fira Code',monospace; font-size: 0.8rem; color: var(--text); }
+    .slide-header { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; }
+    .slide-header-line { flex: 1; height: 1px; background: var(--border); }
+    .slide-header h2 { margin-bottom: 0; }
+    .ok { color: var(--green); font-weight: 700; } .no { color: var(--red); }
+    .key-hint { position: fixed; bottom: 16px; right: 24px; font-size: 11px; color: var(--border); }
+
+    /* Structure pills for overview */
+    .struct-pill { border-radius: 12px; padding: 20px; text-align: center; }
+  </style>
+</head>
+<body>
+
+<div class="nav">
+  <span class="nav-title">Python — Estructuras de Datos</span>
+  <div class="nav-controls">
+    <button class="btn" id="prevBtn" onclick="changeSlide(-1)">← Anterior</button>
+    <span class="nav-counter" id="counter">1 / 1</span>
+    <button class="btn" id="nextBtn" onclick="changeSlide(1)">Siguiente →</button>
+  </div>
+</div>
+<div class="progress-bar"><div class="progress-fill" id="progress"></div></div>
+
+<div class="slides-wrapper">
+
+  <!-- 1. PORTADA -->
+  <div class="slide slide-title active">
+    <div style="font-size:4rem; margin-bottom:16px;">🗂️</div>
+    <h1>Estructuras de <span class="gold">Datos</span></h1>
+    <p class="title-sub">list · tuple · dict · set</p>
+    <span class="title-tag">Módulo 4 — Colecciones</span>
+  </div>
+
+  <!-- 2. PANORAMA -->
+  <div class="slide">
+    <div class="slide-header"><h2>Las 4 estructuras de datos en Python</h2><div class="slide-header-line"></div></div>
+    <div class="grid-4" style="margin-bottom:20px;">
+      <div class="card" style="text-align:center; border-top:3px solid var(--blue);">
+        <div style="font-size:1.6rem; margin-bottom:8px;">📋</div>
+        <div style="font-family:monospace; font-weight:800; color:var(--blue); font-size:1.1rem;">list</div>
+        <p style="margin-top:8px; font-size:0.8rem;">Ordenada · Mutable · Duplicados OK</p>
+        <p style="font-size:0.8rem; margin-top:4px; color:var(--muted);">[1, 2, 3]</p>
+      </div>
+      <div class="card" style="text-align:center; border-top:3px solid var(--green);">
+        <div style="font-size:1.6rem; margin-bottom:8px;">🔒</div>
+        <div style="font-family:monospace; font-weight:800; color:var(--green); font-size:1.1rem;">tuple</div>
+        <p style="margin-top:8px; font-size:0.8rem;">Ordenada · Inmutable · Duplicados OK</p>
+        <p style="font-size:0.8rem; margin-top:4px; color:var(--muted);">(1, 2, 3)</p>
+      </div>
+      <div class="card" style="text-align:center; border-top:3px solid var(--gold);">
+        <div style="font-size:1.6rem; margin-bottom:8px;">🗝️</div>
+        <div style="font-family:monospace; font-weight:800; color:var(--gold); font-size:1.1rem;">dict</div>
+        <p style="margin-top:8px; font-size:0.8rem;">Clave:Valor · Mutable · Claves únicas</p>
+        <p style="font-size:0.8rem; margin-top:4px; color:var(--muted);">{"a": 1}</p>
+      </div>
+      <div class="card" style="text-align:center; border-top:3px solid var(--orange);">
+        <div style="font-size:1.6rem; margin-bottom:8px;">🔵</div>
+        <div style="font-family:monospace; font-weight:800; color:var(--orange); font-size:1.1rem;">set</div>
+        <p style="margin-top:8px; font-size:0.8rem;">Sin orden · Mutable · Sin duplicados</p>
+        <p style="font-size:0.8rem; margin-top:4px; color:var(--muted);">{1, 2, 3}</p>
+      </div>
+    </div>
+    <table class="clean">
+      <tr><th>Estructura</th><th>Sintaxis</th><th>Ordenada</th><th>Mutable</th><th>Duplicados</th><th>Acceso</th><th>Uso típico</th></tr>
+      <tr>
+        <td><strong class="highlight">list</strong></td><td><code>[ ]</code></td>
+        <td class="ok">Sí</td><td class="ok">Sí</td><td class="ok">Sí</td>
+        <td>índice <code>[0]</code></td><td>Colecciones que cambian</td>
+      </tr>
+      <tr>
+        <td><strong class="green">tuple</strong></td><td><code>( )</code></td>
+        <td class="ok">Sí</td><td class="no">No</td><td class="ok">Sí</td>
+        <td>índice <code>[0]</code></td><td>Datos fijos (coord, config)</td>
+      </tr>
+      <tr>
+        <td><strong class="gold">dict</strong></td><td><code>{ : }</code></td>
+        <td class="ok">Inserción</td><td class="ok">Sí</td><td class="no">Claves no</td>
+        <td>clave <code>["key"]</code></td><td>Objetos, registros, JSON</td>
+      </tr>
+      <tr>
+        <td><strong class="orange">set</strong></td><td><code>{ , }</code></td>
+        <td class="no">No</td><td class="ok">Sí</td><td class="no">No</td>
+        <td>No por índice</td><td>Valores únicos, intersecciones</td>
+      </tr>
+    </table>
+  </div>
+
+  <!-- ══════════════════ LISTAS ══════════════════ -->
+  <div class="slide slide-section">
+    <div class="section-number">01</div>
+    <div class="section-title"><span class="highlight">Listas</span> <span style="font-family:monospace; font-size:1.8rem;">[ ]</span></div>
+    <div class="section-desc">La estructura de datos más usada en Python</div>
+  </div>
+
+  <!-- 4. LISTAS — DEFINICIÓN Y ACCESO -->
+  <div class="slide">
+    <div class="slide-header"><h2>📋 Lista <span class="badge" style="color:var(--blue);">list</span></h2><div class="slide-header-line"></div></div>
+    <div class="grid-2">
+      <div style="display:flex; flex-direction:column; gap:14px;">
+        <p>Colección <strong class="highlight">ordenada y mutable</strong> de elementos. Puede contener cualquier tipo de dato, incluso mezclas. Es la estructura más flexible de Python.</p>
+        <pre><span class="code-cmt"># Crear listas</span>
+<span class="code-var">numeros</span>   = [<span class="code-num">1</span>, <span class="code-num">2</span>, <span class="code-num">3</span>, <span class="code-num">4</span>, <span class="code-num">5</span>]
+<span class="code-var">nombres</span>   = [<span class="code-str">"Ana"</span>, <span class="code-str">"Luis"</span>, <span class="code-str">"María"</span>]
+<span class="code-var">mixta</span>     = [<span class="code-num">1</span>, <span class="code-str">"dos"</span>, <span class="code-num">3.0</span>, <span class="code-bool">True</span>, <span class="code-bool">None</span>]
+<span class="code-var">vacia</span>     = []
+
+<span class="code-cmt"># Acceder por índice</span>
+<span class="code-fn">print</span>(<span class="code-var">nombres</span>[<span class="code-num">0</span>])    <span class="code-cmt"># "Ana"</span>
+<span class="code-fn">print</span>(<span class="code-var">nombres</span>[<span class="code-num">-1</span>])   <span class="code-cmt"># "María" — último</span>
+
+<span class="code-cmt"># Slicing</span>
+<span class="code-fn">print</span>(<span class="code-var">numeros</span>[<span class="code-num">1</span>:<span class="code-num">4</span>])  <span class="code-cmt"># [2, 3, 4]</span>
+<span class="code-fn">print</span>(<span class="code-var">numeros</span>[::<span class="code-num">-1</span>]) <span class="code-cmt"># [5, 4, 3, 2, 1] invertida</span>
+
+<span class="code-cmt"># Modificar elemento</span>
+<span class="code-var">nombres</span>[<span class="code-num">1</span>] = <span class="code-str">"Carlos"</span>  <span class="code-cmt"># ✓ las listas son mutables</span></pre>
+      </div>
+      <div style="display:flex; flex-direction:column; gap:14px;">
+        <p style="font-size:0.85rem; color:var(--muted);">Operaciones básicas:</p>
+        <pre><span class="code-cmt"># Longitud</span>
+<span class="code-fn">print</span>(<span class="code-fn">len</span>(<span class="code-var">numeros</span>))       <span class="code-cmt"># 5</span>
+
+<span class="code-cmt"># Verificar existencia</span>
+<span class="code-fn">print</span>(<span class="code-num">3</span> <span class="code-kw">in</span> <span class="code-var">numeros</span>)       <span class="code-cmt"># True</span>
+<span class="code-fn">print</span>(<span class="code-num">99</span> <span class="code-kw">not in</span> <span class="code-var">numeros</span>)  <span class="code-cmt"># True</span>
+
+<span class="code-cmt"># Concatenar listas</span>
+<span class="code-var">a</span> = [<span class="code-num">1</span>, <span class="code-num">2</span>]
+<span class="code-var">b</span> = [<span class="code-num">3</span>, <span class="code-num">4</span>]
+<span class="code-fn">print</span>(<span class="code-var">a</span> + <span class="code-var">b</span>)              <span class="code-cmt"># [1, 2, 3, 4]</span>
+
+<span class="code-cmt"># Repetir</span>
+<span class="code-fn">print</span>([<span class="code-num">0</span>] * <span class="code-num">5</span>)            <span class="code-cmt"># [0, 0, 0, 0, 0]</span>
+
+<span class="code-cmt"># Funciones útiles</span>
+<span class="code-fn">print</span>(<span class="code-fn">sum</span>(<span class="code-var">numeros</span>))        <span class="code-cmt"># 15</span>
+<span class="code-fn">print</span>(<span class="code-fn">max</span>(<span class="code-var">numeros</span>))        <span class="code-cmt"># 5</span>
+<span class="code-fn">print</span>(<span class="code-fn">min</span>(<span class="code-var">numeros</span>))        <span class="code-cmt"># 1</span></pre>
+      </div>
+    </div>
+  </div>
+
+  <!-- 5. MÉTODOS DE LISTAS -->
+  <div class="slide">
+    <div class="slide-header"><h2>🔧 Métodos de listas</h2><div class="slide-header-line"></div></div>
+    <div class="grid-2">
+      <table class="clean">
+        <tr><th>Método</th><th>Descripción</th><th>Ejemplo</th></tr>
+        <tr><td><code class="badge">.append(x)</code></td><td>Agrega al final</td><td><code>lista.append(5)</code></td></tr>
+        <tr><td><code class="badge">.insert(i, x)</code></td><td>Inserta en posición i</td><td><code>lista.insert(2, 99)</code></td></tr>
+        <tr><td><code class="badge">.extend(iter)</code></td><td>Agrega todos los elementos</td><td><code>lista.extend([6, 7])</code></td></tr>
+        <tr><td><code class="badge">.remove(x)</code></td><td>Elimina primera aparición de x</td><td><code>lista.remove(3)</code></td></tr>
+        <tr><td><code class="badge">.pop([i])</code></td><td>Elimina y devuelve elemento</td><td><code>lista.pop()</code></td></tr>
+        <tr><td><code class="badge">.clear()</code></td><td>Vacía la lista</td><td><code>lista.clear()</code></td></tr>
+        <tr><td><code class="badge">.index(x)</code></td><td>Índice de primera aparición</td><td><code>lista.index(4)</code></td></tr>
+        <tr><td><code class="badge">.count(x)</code></td><td>Cuántas veces aparece x</td><td><code>lista.count(2)</code></td></tr>
+        <tr><td><code class="badge">.sort()</code></td><td>Ordena la lista (modifica)</td><td><code>lista.sort()</code></td></tr>
+        <tr><td><code class="badge">.reverse()</code></td><td>Invierte el orden</td><td><code>lista.reverse()</code></td></tr>
+        <tr><td><code class="badge">.copy()</code></td><td>Copia superficial</td><td><code>b = lista.copy()</code></td></tr>
+      </table>
+      <div style="display:flex; flex-direction:column; gap:12px;">
+        <p style="font-size:0.85rem; color:var(--muted);">Los más usados en la práctica:</p>
+        <pre><span class="code-var">carrito</span> = [<span class="code-str">"pan"</span>, <span class="code-str">"leche"</span>]
+
+<span class="code-var">carrito</span>.<span class="code-fn">append</span>(<span class="code-str">"huevos"</span>)     <span class="code-cmt"># agregar</span>
+<span class="code-var">carrito</span>.<span class="code-fn">insert</span>(<span class="code-num">0</span>, <span class="code-str">"agua"</span>)   <span class="code-cmt"># al inicio</span>
+<span class="code-var">carrito</span>.<span class="code-fn">remove</span>(<span class="code-str">"leche"</span>)    <span class="code-cmt"># eliminar valor</span>
+<span class="code-var">ultimo</span> = <span class="code-var">carrito</span>.<span class="code-fn">pop</span>()     <span class="code-cmt"># sacar último</span>
+
+<span class="code-fn">print</span>(<span class="code-var">carrito</span>)
+<span class="code-fn">print</span>(<span class="code-fn">len</span>(<span class="code-var">carrito</span>))</pre>
+        <div class="callout-warn callout">
+          <strong style="color:var(--orange);">.sort() vs sorted()</strong><br/>
+          <code>lista.sort()</code> modifica la original.<br/>
+          <code>sorted(lista)</code> devuelve una nueva lista ordenada sin tocar la original.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════ TUPLAS ══════════════════ -->
+  <div class="slide slide-section">
+    <div class="section-number">02</div>
+    <div class="section-title"><span class="green">Tuplas</span> <span style="font-family:monospace; font-size:1.8rem;">( )</span></div>
+    <div class="section-desc">Como una lista, pero que no se puede modificar</div>
+  </div>
+
+  <!-- 7. TUPLAS -->
+  <div class="slide">
+    <div class="slide-header"><h2>🔒 Tupla <span class="badge" style="color:var(--green);">tuple</span></h2><div class="slide-header-line"></div></div>
+    <div class="grid-2">
+      <div style="display:flex; flex-direction:column; gap:14px;">
+        <p>Colección <strong class="green">ordenada e inmutable</strong>. Una vez creada, no puedes cambiar sus elementos. Perfecta para datos que no deben modificarse.</p>
+        <pre><span class="code-cmt"># Crear tuplas</span>
+<span class="code-var">punto</span>     = (<span class="code-num">10</span>, <span class="code-num">20</span>)
+<span class="code-var">colores</span>   = (<span class="code-str">"rojo"</span>, <span class="code-str">"verde"</span>, <span class="code-str">"azul"</span>)
+<span class="code-var">mixta</span>     = (<span class="code-num">1</span>, <span class="code-str">"dos"</span>, <span class="code-bool">True</span>)
+<span class="code-var">un_elem</span>   = (<span class="code-num">42</span>,)   <span class="code-cmt"># coma obligatoria para 1 elemento</span>
+
+<span class="code-cmt"># Acceder — igual que lista</span>
+<span class="code-fn">print</span>(<span class="code-var">punto</span>[<span class="code-num">0</span>])     <span class="code-cmt"># 10</span>
+<span class="code-fn">print</span>(<span class="code-var">colores</span>[<span class="code-num">-1</span>])  <span class="code-cmt"># "azul"</span>
+
+<span class="code-cmt"># Desempaquetar</span>
+<span class="code-var">x</span>, <span class="code-var">y</span> = <span class="code-var">punto</span>
+<span class="code-fn">print</span>(<span class="code-var">x</span>, <span class="code-var">y</span>)         <span class="code-cmt"># 10 20</span>
+
+<span class="code-cmt"># Intentar modificar → Error</span>
+<span class="code-cmt"># punto[0] = 99     # TypeError!</span></pre>
+      </div>
+      <div style="display:flex; flex-direction:column; gap:14px;">
+        <div class="grid-2" style="gap:10px;">
+          <div class="card" style="background:#0d2318; border-color:#1a4d31;">
+            <h3 class="green" style="font-size:0.9rem;">Características</h3>
+            <ul class="clean" style="margin-top:6px;">
+              <li style="font-size:0.83rem;">Ordenada — tiene índices</li>
+              <li style="font-size:0.83rem;">Inmutable — no cambia</li>
+              <li style="font-size:0.83rem;">Permite duplicados</li>
+              <li style="font-size:0.83rem;">Más rápida que list</li>
+            </ul>
+          </div>
+          <div class="card" style="background:#2a1500; border-color:#6b3a00;">
+            <h3 class="orange" style="font-size:0.9rem;">Solo 2 métodos</h3>
+            <ul class="clean" style="margin-top:6px;">
+              <li style="font-size:0.83rem;"><code>.count(x)</code> — cuántas veces aparece</li>
+              <li style="font-size:0.83rem;"><code>.index(x)</code> — posición de x</li>
+            </ul>
+          </div>
+        </div>
+        <p style="font-size:0.85rem; color:var(--muted);">¿Cuándo usar tuple en vez de list?</p>
+        <ul class="clean">
+          <li>Coordenadas, colores RGB: <code>(255, 128, 0)</code></li>
+          <li>Datos de configuración que no cambian</li>
+          <li>Claves de diccionario (los dict no aceptan list como clave)</li>
+          <li>Cuando quieres proteger datos de modificaciones accidentales</li>
+        </ul>
+        <div class="callout-blue callout">
+          <strong class="highlight">list → tuple:</strong> <code>tuple([1,2,3])</code><br/>
+          <strong class="highlight">tuple → list:</strong> <code>list((1,2,3))</code>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════ DICCIONARIOS ══════════════════ -->
+  <div class="slide slide-section">
+    <div class="section-number">03</div>
+    <div class="section-title"><span class="gold">Diccionarios</span> <span style="font-family:monospace; font-size:1.8rem;">{ }</span></div>
+    <div class="section-desc">Pares clave-valor — la base de JSON y los objetos</div>
+  </div>
+
+  <!-- 9. DICT — DEFINICIÓN -->
+  <div class="slide">
+    <div class="slide-header"><h2>🗝️ Diccionario <span class="badge" style="color:var(--gold);">dict</span></h2><div class="slide-header-line"></div></div>
+    <div class="grid-2">
+      <div style="display:flex; flex-direction:column; gap:14px;">
+        <p>Colección de pares <strong class="gold">clave: valor</strong>. Accedes a los valores por clave, no por índice. Mutable desde Python 3.7 mantiene el orden de inserción.</p>
+        <pre><span class="code-cmt"># Crear diccionario</span>
+<span class="code-var">usuario</span> = {
+    <span class="code-str">"nombre"</span>: <span class="code-str">"Carlos"</span>,
+    <span class="code-str">"edad"</span>:   <span class="code-num">30</span>,
+    <span class="code-str">"activo"</span>: <span class="code-bool">True</span>
+}
+
+<span class="code-cmt"># Acceder por clave</span>
+<span class="code-fn">print</span>(<span class="code-var">usuario</span>[<span class="code-str">"nombre"</span>])    <span class="code-cmt"># "Carlos"</span>
+<span class="code-fn">print</span>(<span class="code-var">usuario</span>.<span class="code-fn">get</span>(<span class="code-str">"edad"</span>))  <span class="code-cmt"># 30 — forma segura</span>
+
+<span class="code-cmt"># Agregar / modificar</span>
+<span class="code-var">usuario</span>[<span class="code-str">"email"</span>] = <span class="code-str">"ana@example.com"</span>
+<span class="code-var">usuario</span>[<span class="code-str">"edad"</span>]  = <span class="code-num">31</span>
+
+<span class="code-cmt"># Eliminar</span>
+<span class="code-kw">del</span> <span class="code-var">usuario</span>[<span class="code-str">"activo"</span>]</pre>
+      </div>
+      <div style="display:flex; flex-direction:column; gap:14px;">
+        <pre><span class="code-cmt"># Recorrer claves y valores</span>
+<span class="code-kw">for</span> <span class="code-var">clave</span> <span class="code-kw">in</span> <span class="code-var">usuario</span>.<span class="code-fn">keys</span>():
+    <span class="code-fn">print</span>(<span class="code-var">clave</span>)
+
+<span class="code-kw">for</span> <span class="code-var">valor</span> <span class="code-kw">in</span> <span class="code-var">usuario</span>.<span class="code-fn">values</span>():
+    <span class="code-fn">print</span>(<span class="code-var">valor</span>)
+
+<span class="code-kw">for</span> <span class="code-var">clave</span>, <span class="code-var">valor</span> <span class="code-kw">in</span> <span class="code-var">usuario</span>.<span class="code-fn">items</span>():
+    <span class="code-fn">print</span>(<span class="code-str">f"<span class="code-var">{clave}</span>: <span class="code-var">{valor}</span>"</span>)</pre>
+        <div class="callout-warn callout">
+          <strong style="color:var(--orange);">[ ] vs .get()</strong><br/>
+          <code style="color:var(--red);">usuario["telefono"]</code> → <strong>KeyError</strong> si no existe<br/>
+          <code style="color:var(--green);">usuario.get("telefono")</code> → <strong>None</strong> sin error<br/>
+          <code style="color:var(--green);">usuario.get("telefono", "N/A")</code> → valor por defecto
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 10. MÉTODOS DICT -->
+  <div class="slide">
+    <div class="slide-header"><h2>🔧 Métodos de diccionarios</h2><div class="slide-header-line"></div></div>
+    <div class="grid-2">
+      <table class="clean">
+        <tr><th>Método</th><th>Descripción</th></tr>
+        <tr><td><code class="badge">.get(clave)</code></td><td>Devuelve el valor o None (sin error)</td></tr>
+        <tr><td><code class="badge">.get(c, default)</code></td><td>Devuelve valor o valor por defecto</td></tr>
+        <tr><td><code class="badge">.keys()</code></td><td>Devuelve todas las claves</td></tr>
+        <tr><td><code class="badge">.values()</code></td><td>Devuelve todos los valores</td></tr>
+        <tr><td><code class="badge">.items()</code></td><td>Devuelve pares (clave, valor) como tuplas</td></tr>
+        <tr><td><code class="badge">.update(dict)</code></td><td>Agrega/actualiza con otro diccionario</td></tr>
+        <tr><td><code class="badge">.pop(clave)</code></td><td>Elimina y devuelve el valor de la clave</td></tr>
+        <tr><td><code class="badge">.clear()</code></td><td>Vacía el diccionario</td></tr>
+        <tr><td><code class="badge">.copy()</code></td><td>Copia superficial del diccionario</td></tr>
+        <tr><td><code class="badge">in</code></td><td>Verificar si clave existe</td></tr>
+      </table>
+      <div style="display:flex; flex-direction:column; gap:12px;">
+        <pre style="font-size:0.82rem;"><span class="code-var">producto</span> = {<span class="code-str">"nombre"</span>: <span class="code-str">"Laptop"</span>, <span class="code-str">"precio"</span>: <span class="code-num">999</span>}
+
+<span class="code-cmt"># update — agregar varios a la vez</span>
+<span class="code-var">producto</span>.<span class="code-fn">update</span>({<span class="code-str">"stock"</span>: <span class="code-num">10</span>, <span class="code-str">"marca"</span>: <span class="code-str">"Dell"</span>})
+
+<span class="code-cmt"># pop — eliminar y guardar valor</span>
+<span class="code-var">precio_viejo</span> = <span class="code-var">producto</span>.<span class="code-fn">pop</span>(<span class="code-str">"precio"</span>)
+
+<span class="code-cmt"># Verificar clave con "in"</span>
+<span class="code-kw">if</span> <span class="code-str">"stock"</span> <span class="code-kw">in</span> <span class="code-var">producto</span>:
+    <span class="code-fn">print</span>(<span class="code-str">"Hay stock disponible"</span>)
+
+<span class="code-cmt"># Dict anidado — muy común con APIs</span>
+<span class="code-var">usuario</span> = {
+    <span class="code-str">"nombre"</span>: <span class="code-str">"Ana"</span>,
+    <span class="code-str">"direccion"</span>: {
+        <span class="code-str">"ciudad"</span>: <span class="code-str">"Bogotá"</span>,
+        <span class="code-str">"pais"</span>:   <span class="code-str">"Colombia"</span>
+    }
+}
+<span class="code-fn">print</span>(<span class="code-var">usuario</span>[<span class="code-str">"direccion"</span>][<span class="code-str">"ciudad"</span>])  <span class="code-cmt"># "Bogotá"</span></pre>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════ SETS ══════════════════ -->
+  <div class="slide slide-section">
+    <div class="section-number">04</div>
+    <div class="section-title"><span class="orange">Conjuntos</span> <span style="font-family:monospace; font-size:1.8rem;">{ , }</span></div>
+    <div class="section-desc">Sin orden, sin duplicados — ideal para operaciones de conjuntos</div>
+  </div>
+
+  <!-- 12. SETS -->
+  <div class="slide">
+    <div class="slide-header"><h2>🔵 Set (Conjunto) <span class="badge" style="color:var(--orange);">set</span></h2><div class="slide-header-line"></div></div>
+    <div class="grid-2">
+      <div style="display:flex; flex-direction:column; gap:12px;">
+        <ul class="clean">
+          <li><strong>Sin duplicados</strong> — valores únicos automáticamente</li>
+          <li><strong>Sin orden</strong> — no se accede por índice</li>
+          <li><strong>Mutable</strong> — puedes agregar o quitar elementos</li>
+          <li><strong>Operaciones matemáticas</strong> de conjuntos incluidas</li>
+        </ul>
+        <pre><span class="code-cmt"># Crear set</span>
+<span class="code-var">frutas</span>  = {<span class="code-str">"manzana"</span>, <span class="code-str">"pera"</span>, <span class="code-str">"uva"</span>}
+<span class="code-var">numeros</span> = {<span class="code-num">1</span>, <span class="code-num">2</span>, <span class="code-num">2</span>, <span class="code-num">3</span>, <span class="code-num">3</span>}  <span class="code-cmt"># → {1, 2, 3}</span>
+
+<span class="code-cmt"># Set vacío — IMPORTANTE: no usar {}</span>
+<span class="code-var">vacio</span> = <span class="code-fn">set</span>()              <span class="code-cmt"># {} crea un dict vacío!</span>
+
+<span class="code-cmt"># Agregar / quitar</span>
+<span class="code-var">frutas</span>.<span class="code-fn">add</span>(<span class="code-str">"mango"</span>)
+<span class="code-var">frutas</span>.<span class="code-fn">discard</span>(<span class="code-str">"pera"</span>)    <span class="code-cmt"># no lanza error si no existe</span>
+
+<span class="code-cmt"># Truco: eliminar duplicados de lista</span>
+<span class="code-var">lista</span> = [<span class="code-num">1</span>, <span class="code-num">2</span>, <span class="code-num">2</span>, <span class="code-num">3</span>, <span class="code-num">3</span>, <span class="code-num">3</span>]
+<span class="code-var">unicos</span> = <span class="code-fn">list</span>(<span class="code-fn">set</span>(<span class="code-var">lista</span>))   <span class="code-cmt"># [1, 2, 3]</span></pre>
+      </div>
+      <div style="display:flex; flex-direction:column; gap:12px;">
+        <p style="font-size:0.85rem; color:var(--muted);">Operaciones matemáticas de conjuntos:</p>
+        <pre><span class="code-var">a</span> = {<span class="code-num">1</span>, <span class="code-num">2</span>, <span class="code-num">3</span>}
+<span class="code-var">b</span> = {<span class="code-num">3</span>, <span class="code-num">4</span>, <span class="code-num">5</span>}
+
+<span class="code-fn">print</span>(<span class="code-var">a</span> | <span class="code-var">b</span>)    <span class="code-cmt"># Unión:          {1,2,3,4,5}</span>
+<span class="code-fn">print</span>(<span class="code-var">a</span> & <span class="code-var">b</span>)    <span class="code-cmt"># Intersección:   {3}</span>
+<span class="code-fn">print</span>(<span class="code-var">a</span> - <span class="code-var">b</span>)    <span class="code-cmt"># Diferencia:     {1, 2}</span>
+<span class="code-fn">print</span>(<span class="code-var">a</span> ^ <span class="code-var">b</span>)    <span class="code-cmt"># Dif. simétrica: {1,2,4,5}</span></pre>
+        <table class="clean">
+          <tr><th>Método</th><th>Descripción</th></tr>
+          <tr><td><code>.add(x)</code></td><td>Agrega un elemento</td></tr>
+          <tr><td><code>.remove(x)</code></td><td>Elimina; error si no existe</td></tr>
+          <tr><td><code>.discard(x)</code></td><td>Elimina; sin error si no existe</td></tr>
+          <tr><td><code>.issubset(b)</code></td><td>¿a es subconjunto de b?</td></tr>
+          <tr><td><code>.isdisjoint(b)</code></td><td>¿No tienen elementos en común?</td></tr>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- 13. COMPARATIVA FINAL -->
+  <div class="slide">
+    <div class="slide-header"><h2>¿Cuál usar y cuándo?</h2><div class="slide-header-line"></div></div>
+    <div class="grid-4" style="margin-bottom:18px;">
+      <div class="card card-accent-blue">
+        <h3 class="highlight">Usa list cuando…</h3>
+        <ul class="clean" style="margin-top:8px;">
+          <li style="font-size:0.82rem;">Necesitas orden y modificar</li>
+          <li style="font-size:0.82rem;">Permites duplicados</li>
+          <li style="font-size:0.82rem;">Recorres con for</li>
+          <li style="font-size:0.82rem;">Es tu opción por defecto</li>
+        </ul>
+      </div>
+      <div class="card card-accent-green">
+        <h3 class="green">Usa tuple cuando…</h3>
+        <ul class="clean" style="margin-top:8px;">
+          <li style="font-size:0.82rem;">Datos no deben cambiar</li>
+          <li style="font-size:0.82rem;">Coordenadas, configs</li>
+          <li style="font-size:0.82rem;">Clave de diccionario</li>
+          <li style="font-size:0.82rem;">Necesitas rendimiento</li>
+        </ul>
+      </div>
+      <div class="card card-accent-gold">
+        <h3 class="gold">Usa dict cuando…</h3>
+        <ul class="clean" style="margin-top:8px;">
+          <li style="font-size:0.82rem;">Datos tienen nombre (clave)</li>
+          <li style="font-size:0.82rem;">Trabajas con JSON/APIs</li>
+          <li style="font-size:0.82rem;">Describes un "objeto"</li>
+          <li style="font-size:0.82rem;">Búsqueda rápida por nombre</li>
+        </ul>
+      </div>
+      <div class="card card-accent-orange">
+        <h3 class="orange">Usa set cuando…</h3>
+        <ul class="clean" style="margin-top:8px;">
+          <li style="font-size:0.82rem;">Necesitas valores únicos</li>
+          <li style="font-size:0.82rem;">Eliminar duplicados</li>
+          <li style="font-size:0.82rem;">Unión / intersección</li>
+          <li style="font-size:0.82rem;">El orden no importa</li>
+        </ul>
+      </div>
+    </div>
+    <pre style="font-size:0.82rem;"><span class="code-cmt"># Ejemplo práctico — perfil de usuario</span>
+<span class="code-var">usuario</span> = {                                <span class="code-cmt"># dict — tiene propiedades con nombre</span>
+    <span class="code-str">"nombre"</span>:     <span class="code-str">"Ana García"</span>,
+    <span class="code-str">"hobbies"</span>:    [<span class="code-str">"leer"</span>, <span class="code-str">"correr"</span>, <span class="code-str">"cocinar"</span>],   <span class="code-cmt"># list — orden importa, puede cambiar</span>
+    <span class="code-str">"coordenadas"</span>:(<span class="code-num">4.7110</span>, <span class="code-num">-74.0721</span>),              <span class="code-cmt"># tuple — no cambia</span>
+    <span class="code-str">"permisos"</span>:   {<span class="code-str">"leer"</span>, <span class="code-str">"escribir"</span>}               <span class="code-cmt"># set — únicos, sin orden</span>
+}</pre>
+  </div>
+
+  <!-- 14. ACTIVIDAD -->
+  <div class="slide">
+    <div class="slide-header"><h2>💻 Actividad — Agenda de contactos</h2><div class="slide-header-line"></div></div>
+    <div class="grid-2">
+      <div style="display:flex; flex-direction:column; gap:12px;">
+        <div class="callout-green callout">
+          <strong class="green">Objetivo:</strong> Construir una agenda simple usando dict, list y set.
+        </div>
+        <ul class="clean">
+          <li>Crea un dict con tu información: nombre, edad, teléfono, correos (list), etiquetas (set)</li>
+          <li>Agrega un segundo correo a la lista</li>
+          <li>Agrega una etiqueta al set</li>
+          <li>Intenta agregar una etiqueta duplicada — ¿qué pasa?</li>
+          <li>Imprime todo con f-strings formateados</li>
+          <li>Usa <code>.get()</code> para buscar un campo que no existe</li>
+        </ul>
+        <div class="callout">
+          <strong>Reto:</strong> Crea una lista de 3 contactos (cada uno es un dict) y agrégalos a una lista. Imprime solo los nombres de todos.
+        </div>
+      </div>
+      <pre style="font-size:0.82rem;"><span class="code-cmt"># Código base</span>
+<span class="code-var">contacto</span> = {
+    <span class="code-str">"nombre"</span>:  <span class="code-str">"Tu nombre"</span>,
+    <span class="code-str">"edad"</span>:    <span class="code-num">0</span>,
+    <span class="code-str">"telefono"</span>:<span class="code-str">"000-0000"</span>,
+    <span class="code-str">"correos"</span>: [<span class="code-str">"principal@mail.com"</span>],
+    <span class="code-str">"etiquetas"</span>: {<span class="code-str">"amigo"</span>, <span class="code-str">"trabajo"</span>}
+}
+
+<span class="code-cmt"># Agregar correo</span>
+<span class="code-var">contacto</span>[<span class="code-str">"correos"</span>].<span class="code-fn">append</span>(<span class="code-str">"otro@mail.com"</span>)
+
+<span class="code-cmt"># Agregar etiqueta</span>
+<span class="code-var">contacto</span>[<span class="code-str">"etiquetas"</span>].<span class="code-fn">add</span>(<span class="code-str">"familia"</span>)
+
+<span class="code-cmt"># Imprimir</span>
+<span class="code-fn">print</span>(<span class="code-str">f"Nombre: <span class="code-var">{contacto['nombre']}</span>"</span>)
+<span class="code-fn">print</span>(<span class="code-str">f"Correos: <span class="code-var">{contacto['correos']}</span>"</span>)
+<span class="code-fn">print</span>(<span class="code-str">f"Etiquetas: <span class="code-var">{contacto['etiquetas']}</span>"</span>)
+
+<span class="code-cmt"># Campo inexistente</span>
+<span class="code-fn">print</span>(<span class="code-var">contacto</span>.<span class="code-fn">get</span>(<span class="code-str">"direccion"</span>, <span class="code-str">"No registrada"</span>))</pre>
+    </div>
+  </div>
+
+  <!-- 15. CIERRE -->
+  <div class="slide slide-title">
+    <div style="font-size:3.5rem; margin-bottom:16px;">🗂️</div>
+    <h1>¿Preguntas?</h1>
+    <p class="title-sub" style="max-width:560px; text-align:center; margin-top:12px;">
+      Próxima clase: <span class="gold">Estructuras de Control</span><br/>
+      <span style="font-size:0.9rem;">if / elif / else — for — while</span>
+    </p>
+    <div style="display:flex; gap:12px; margin-top:24px; flex-wrap:wrap; justify-content:center;">
+      <div class="callout" style="font-size:0.82rem; padding:10px 16px;">📌 Tarea: Completar actividad agenda de contactos</div>
+      <div class="callout" style="font-size:0.82rem; padding:10px 16px;">💡 ¿Por qué <code>{}</code> crea dict y no set?</div>
+    </div>
+    <span class="title-tag" style="margin-top:20px;">Módulo 4 — Completado</span>
+  </div>
+
+</div>
+<div class="key-hint">← → para navegar</div>
+
+<script>
+  const STORAGE_KEY = 'slide_' + location.pathname;
+  const slides = document.querySelectorAll('.slide');
+  const total  = slides.length;
+  let current  = Math.min(parseInt(localStorage.getItem(STORAGE_KEY) || '0', 10), total - 1);
+
+  function updateUI() {
+    slides.forEach((s, i) => s.classList.toggle('active', i === current));
+    document.getElementById('counter').textContent  = `${current + 1} / ${total}`;
+    document.getElementById('progress').style.width = `${((current + 1) / total) * 100}%`;
+    document.getElementById('prevBtn').disabled = current === 0;
+    document.getElementById('nextBtn').disabled = current === total - 1;
+    localStorage.setItem(STORAGE_KEY, current);
+  }
+
+  function changeSlide(dir) {
+    const next = current + dir;
+    if (next >= 0 && next < total) { current = next; updateUI(); }
+  }
+
+  document.addEventListener('keydown', e => {
+    if (e.key === 'ArrowRight' || e.key === 'ArrowDown') changeSlide(1);
+    if (e.key === 'ArrowLeft'  || e.key === 'ArrowUp')   changeSlide(-1);
+  });
+
+  updateUI();
+</script>
+</body>
+</html>

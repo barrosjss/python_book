@@ -1,0 +1,641 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Datos Primitivos en Python</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    :root {
+      --bg: #0d1117; --surface: #161b22; --surface2: #21262d; --border: #30363d;
+      --text: #e6edf3; --muted: #8b949e;
+      --blue: #4d9de0; --gold: #b8a94a; --green: #3fb950;
+      --orange: #f0883e; --purple: #bc8cff; --red: #f85149;
+    }
+    body { background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
+    .nav { background: var(--surface); border-bottom: 1px solid var(--border); padding: 10px 24px; display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; }
+    .nav-title { font-size: 13px; color: var(--muted); letter-spacing: 0.5px; }
+    .nav-controls { display: flex; align-items: center; gap: 12px; }
+    .nav-counter { font-size: 13px; color: var(--muted); min-width: 60px; text-align: center; }
+    .btn { background: var(--surface2); border: 1px solid var(--border); color: var(--text); padding: 6px 16px; border-radius: 6px; cursor: pointer; font-size: 13px; transition: all 0.15s; }
+    .btn:hover { background: var(--border); }
+    .btn:disabled { opacity: 0.3; cursor: not-allowed; }
+    .progress-bar { height: 3px; background: var(--border); flex-shrink: 0; }
+    .progress-fill { height: 100%; background: linear-gradient(90deg, var(--purple), var(--blue)); transition: width 0.3s ease; }
+    .slides-wrapper { flex: 1; overflow: hidden; position: relative; }
+    .slide { position: absolute; inset: 0; padding: 40px 60px; display: none; flex-direction: column; justify-content: center; overflow-y: auto; }
+    .slide.active { display: flex; }
+    .slide-title { background: radial-gradient(ellipse at 30% 50%, #1e1230 0%, var(--bg) 70%); text-align: center; align-items: center; }
+    .slide-section { background: linear-gradient(135deg, #0d1117 0%, #161b22 100%); align-items: center; text-align: center; }
+    h1 { font-size: 3.2rem; font-weight: 800; line-height: 1.1; }
+    h2 { font-size: 1.8rem; font-weight: 700; margin-bottom: 28px; }
+    h3 { font-size: 1.1rem; font-weight: 600; margin-bottom: 10px; }
+    p  { font-size: 1rem; line-height: 1.7; color: var(--muted); }
+    .title-sub { font-size: 1.2rem; color: var(--muted); margin-top: 16px; }
+    .title-tag { display: inline-block; background: var(--surface2); border: 1px solid var(--border); color: var(--purple); padding: 6px 16px; border-radius: 20px; font-size: 0.85rem; margin-top: 24px; letter-spacing: 1px; text-transform: uppercase; }
+    .highlight { color: var(--blue); } .gold { color: var(--gold); } .green { color: var(--green); }
+    .orange { color: var(--orange); } .purple { color: var(--purple); } .red { color: var(--red); }
+    .section-number { font-size: 5rem; font-weight: 900; color: var(--surface2); line-height: 1; }
+    .section-title { font-size: 2.5rem; font-weight: 800; }
+    .section-desc { font-size: 1rem; color: var(--muted); margin-top: 8px; }
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+    .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+    .grid-5 { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; }
+    .card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 20px; }
+    .card-accent-blue  { border-left: 3px solid var(--blue); }
+    .card-accent-gold  { border-left: 3px solid var(--gold); }
+    .card-accent-green { border-left: 3px solid var(--green); }
+    .card-accent-purple{ border-left: 3px solid var(--purple); }
+    .card-accent-orange{ border-left: 3px solid var(--orange); }
+    pre { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 20px; font-family: 'SF Mono','Fira Code',monospace; font-size: 0.95rem; line-height: 1.8; overflow-x: auto; }
+    .code-kw { color: #ff7b72; } .code-fn { color: #d2a8ff; } .code-str { color: #a5d6ff; }
+    .code-num { color: #79c0ff; } .code-cmt { color: #6e7681; font-style: italic; } .code-var { color: #ffa657; }
+    .code-bool { color: #56d364; }
+    ul.clean { list-style: none; display: flex; flex-direction: column; gap: 10px; }
+    ul.clean li { display: flex; align-items: flex-start; gap: 10px; font-size: 0.95rem; line-height: 1.5; }
+    ul.clean li::before { content: '▸'; color: var(--purple); flex-shrink: 0; margin-top: 1px; }
+    .callout { background: #1a1730; border: 1px solid #3d2d7a; border-radius: 10px; padding: 14px 18px; font-size: 0.9rem; }
+    .callout-green { background: #0d2318; border-color: #1a4d31; }
+    .callout-warn  { background: #2a1500; border-color: #6b3a00; }
+    .callout-red   { background: #2a0d0d; border-color: #6b1a1a; }
+    table.clean { width: 100%; border-collapse: collapse; font-size: 0.88rem; }
+    table.clean th { background: var(--surface2); padding: 10px 14px; text-align: left; font-weight: 600; border-bottom: 2px solid var(--border); }
+    table.clean td { padding: 9px 14px; border-bottom: 1px solid var(--border); color: var(--muted); }
+    table.clean tr:last-child td { border-bottom: none; }
+    .badge { display: inline-block; background: var(--surface2); border: 1px solid var(--border); border-radius: 6px; padding: 3px 10px; font-family: 'SF Mono','Fira Code',monospace; font-size: 0.82rem; color: var(--text); }
+    .slide-header { display: flex; align-items: center; gap: 12px; margin-bottom: 28px; }
+    .slide-header-line { flex: 1; height: 1px; background: var(--border); }
+    .slide-header h2 { margin-bottom: 0; }
+    .type-pill { display: inline-block; padding: 4px 14px; border-radius: 20px; font-family: 'SF Mono','Fira Code',monospace; font-weight: 700; font-size: 0.85rem; }
+    .key-hint { position: fixed; bottom: 16px; right: 24px; font-size: 11px; color: var(--border); }
+
+    /* INDEX visual */
+    .index-row { display: flex; align-items: center; gap: 0; margin: 8px 0; }
+    .index-cell { width: 52px; height: 52px; display: flex; flex-direction: column; align-items: center; justify-content: center; border: 1px solid var(--border); background: var(--surface2); font-family: 'SF Mono','Fira Code',monospace; }
+    .index-cell .char { font-size: 1.2rem; color: var(--text); font-weight: 700; }
+    .index-cell .idx  { font-size: 0.7rem; color: var(--blue); }
+    .index-cell .nidx { font-size: 0.7rem; color: var(--orange); }
+  </style>
+</head>
+<body>
+
+<div class="nav">
+  <span class="nav-title">Python — Datos Primitivos</span>
+  <div class="nav-controls">
+    <button class="btn" id="prevBtn" onclick="changeSlide(-1)">← Anterior</button>
+    <span class="nav-counter" id="counter">1 / 1</span>
+    <button class="btn" id="nextBtn" onclick="changeSlide(1)">Siguiente →</button>
+  </div>
+</div>
+<div class="progress-bar"><div class="progress-fill" id="progress"></div></div>
+
+<div class="slides-wrapper">
+
+  <!-- 1. PORTADA -->
+  <div class="slide slide-title active">
+    <div style="font-size:4rem; margin-bottom:16px;">🔢</div>
+    <h1>Datos <span class="purple">Primitivos</span></h1>
+    <p class="title-sub">Los bloques fundamentales de cualquier programa Python</p>
+    <span class="title-tag">Módulo 2 — Tipos de Datos</span>
+  </div>
+
+  <!-- 2. RESUMEN TIPOS -->
+  <div class="slide">
+    <div class="slide-header"><h2>¿Qué son los datos primitivos?</h2><div class="slide-header-line"></div></div>
+    <div style="display:flex; flex-direction:column; gap:20px;">
+      <p>Todo valor en Python tiene un <strong class="purple">tipo</strong>. Los datos primitivos son los tipos más básicos que existen — los que Python conoce desde el inicio, sin necesidad de importar nada.</p>
+      <div class="grid-5">
+        <div class="card" style="text-align:center; padding:16px 8px; border-top: 3px solid var(--blue);">
+          <div style="font-size:1.6rem; margin-bottom:8px;">🔤</div>
+          <div class="type-pill" style="background:#0e2a40; color:var(--blue);">str</div>
+          <p style="margin-top:8px; font-size:0.8rem;">Texto</p>
+        </div>
+        <div class="card" style="text-align:center; padding:16px 8px; border-top: 3px solid var(--gold);">
+          <div style="font-size:1.6rem; margin-bottom:8px;">🔢</div>
+          <div class="type-pill" style="background:#2a1e00; color:var(--gold);">int</div>
+          <p style="margin-top:8px; font-size:0.8rem;">Entero</p>
+        </div>
+        <div class="card" style="text-align:center; padding:16px 8px; border-top: 3px solid var(--orange);">
+          <div style="font-size:1.6rem; margin-bottom:8px;">📐</div>
+          <div class="type-pill" style="background:#2a1500; color:var(--orange);">float</div>
+          <p style="margin-top:8px; font-size:0.8rem;">Decimal</p>
+        </div>
+        <div class="card" style="text-align:center; padding:16px 8px; border-top: 3px solid var(--green);">
+          <div style="font-size:1.6rem; margin-bottom:8px;">✅</div>
+          <div class="type-pill" style="background:#0d2318; color:var(--green);">bool</div>
+          <p style="margin-top:8px; font-size:0.8rem;">Verdadero/Falso</p>
+        </div>
+        <div class="card" style="text-align:center; padding:16px 8px; border-top: 3px solid var(--muted);">
+          <div style="font-size:1.6rem; margin-bottom:8px;">∅</div>
+          <div class="type-pill" style="background:#1a1a1a; color:var(--muted);">None</div>
+          <p style="margin-top:8px; font-size:0.8rem;">Vacío / nulo</p>
+        </div>
+      </div>
+      <div class="grid-2" style="gap:16px;">
+        <pre><span class="code-fn">print</span>(<span class="code-fn">type</span>(<span class="code-num">42</span>))          <span class="code-cmt"># &lt;class 'int'&gt;</span>
+<span class="code-fn">print</span>(<span class="code-fn">type</span>(<span class="code-num">3.14</span>))        <span class="code-cmt"># &lt;class 'float'&gt;</span>
+<span class="code-fn">print</span>(<span class="code-fn">type</span>(<span class="code-bool">True</span>))        <span class="code-cmt"># &lt;class 'bool'&gt;</span>
+<span class="code-fn">print</span>(<span class="code-fn">type</span>(<span class="code-str">"Hola mundo"</span>)) <span class="code-cmt"># &lt;class 'str'&gt;</span>
+<span class="code-fn">print</span>(<span class="code-fn">type</span>(<span class="code-bool">None</span>))        <span class="code-cmt"># &lt;class 'NoneType'&gt;</span></pre>
+        <div class="callout" style="display:flex; flex-direction:column; gap:10px;">
+          <p><strong class="purple">type()</strong> es una función nativa de Python que devuelve el tipo de cualquier valor. Útil para entender qué estás manejando.</p>
+          <p>Python detecta el tipo <strong class="highlight">automáticamente</strong> según cómo escribes el valor. No necesitas declararlo.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3. STR -->
+  <div class="slide">
+    <div class="slide-header"><h2>🔤 String <span class="badge">str</span></h2><div class="slide-header-line"></div></div>
+    <div class="grid-2">
+      <div style="display:flex; flex-direction:column; gap:14px;">
+        <p>Un <strong class="highlight">str</strong> (string) es una cadena de caracteres. Puede contener letras, números, símbolos y espacios. Siempre va entre comillas.</p>
+        <pre><span class="code-cmt"># Comillas simples o dobles — igual</span>
+<span class="code-var">nombre</span>  = <span class="code-str">"Ana"</span>
+<span class="code-var">saludo</span>  = <span class="code-str">'Hola mundo'</span>
+
+<span class="code-cmt"># Comillas triples — texto multilínea</span>
+<span class="code-var">mensaje</span> = <span class="code-str">"""Este es
+un mensaje
+en varias líneas."""</span>
+
+<span class="code-cmt"># f-string — insertar variables en texto</span>
+<span class="code-var">edad</span> = <span class="code-num">25</span>
+<span class="code-fn">print</span>(<span class="code-str">f"Tengo <span class="code-var">{edad}</span> años"</span>)</pre>
+      </div>
+      <div style="display:flex; flex-direction:column; gap:14px;">
+        <div class="card card-accent-blue">
+          <h3>Concatenación — unir strings</h3>
+          <pre style="margin-top:8px; padding:12px;"><span class="code-var">a</span> = <span class="code-str">"Hola"</span>
+<span class="code-var">b</span> = <span class="code-str">"mundo"</span>
+<span class="code-fn">print</span>(<span class="code-var">a</span> + <span class="code-str">" "</span> + <span class="code-var">b</span>)  <span class="code-cmt"># Hola mundo</span></pre>
+        </div>
+        <div class="card card-accent-gold">
+          <h3>Repetición</h3>
+          <pre style="margin-top:8px; padding:12px;"><span class="code-fn">print</span>(<span class="code-str">"="</span> * <span class="code-num">20</span>)
+<span class="code-cmt"># ====================</span></pre>
+        </div>
+        <div class="callout">
+          <strong class="highlight">len()</strong> devuelve la longitud del string:<br/>
+          <code style="color:var(--blue);">len("Python")</code> → <strong>6</strong>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 4. INDEXACIÓN Y SLICING -->
+  <div class="slide">
+    <div class="slide-header"><h2>📐 Indexación y Slicing</h2><div class="slide-header-line"></div></div>
+    <div style="display:flex; flex-direction:column; gap:20px;">
+      <p>Cada carácter de un string tiene una <strong class="highlight">posición (índice)</strong> que empieza en <code style="color:var(--blue);">0</code>. También puedes contar desde el final con índices negativos.</p>
+
+      <div style="display:flex; flex-direction:column; align-items:center; gap:4px;">
+        <div style="display:flex; gap:4px; margin-bottom:2px;">
+          <div style="width:52px; text-align:center; font-size:0.75rem; color:var(--blue); font-family:monospace;">0</div>
+          <div style="width:52px; text-align:center; font-size:0.75rem; color:var(--blue); font-family:monospace;">1</div>
+          <div style="width:52px; text-align:center; font-size:0.75rem; color:var(--blue); font-family:monospace;">2</div>
+          <div style="width:52px; text-align:center; font-size:0.75rem; color:var(--blue); font-family:monospace;">3</div>
+          <div style="width:52px; text-align:center; font-size:0.75rem; color:var(--blue); font-family:monospace;">4</div>
+          <div style="width:52px; text-align:center; font-size:0.75rem; color:var(--blue); font-family:monospace;">5</div>
+        </div>
+        <div style="display:flex; gap:4px;">
+          <div style="width:52px; height:52px; display:flex; align-items:center; justify-content:center; background:var(--surface2); border:2px solid var(--blue); border-radius:6px; font-size:1.5rem; font-weight:900; font-family:monospace;">P</div>
+          <div style="width:52px; height:52px; display:flex; align-items:center; justify-content:center; background:var(--surface2); border:1px solid var(--border); border-radius:6px; font-size:1.5rem; font-weight:900; font-family:monospace;">y</div>
+          <div style="width:52px; height:52px; display:flex; align-items:center; justify-content:center; background:var(--surface2); border:1px solid var(--border); border-radius:6px; font-size:1.5rem; font-weight:900; font-family:monospace;">t</div>
+          <div style="width:52px; height:52px; display:flex; align-items:center; justify-content:center; background:var(--surface2); border:1px solid var(--border); border-radius:6px; font-size:1.5rem; font-weight:900; font-family:monospace;">h</div>
+          <div style="width:52px; height:52px; display:flex; align-items:center; justify-content:center; background:var(--surface2); border:1px solid var(--border); border-radius:6px; font-size:1.5rem; font-weight:900; font-family:monospace;">o</div>
+          <div style="width:52px; height:52px; display:flex; align-items:center; justify-content:center; background:var(--surface2); border:2px solid var(--orange); border-radius:6px; font-size:1.5rem; font-weight:900; font-family:monospace;">n</div>
+        </div>
+        <div style="display:flex; gap:4px; margin-top:2px;">
+          <div style="width:52px; text-align:center; font-size:0.75rem; color:var(--orange); font-family:monospace;">-6</div>
+          <div style="width:52px; text-align:center; font-size:0.75rem; color:var(--orange); font-family:monospace;">-5</div>
+          <div style="width:52px; text-align:center; font-size:0.75rem; color:var(--orange); font-family:monospace;">-4</div>
+          <div style="width:52px; text-align:center; font-size:0.75rem; color:var(--orange); font-family:monospace;">-3</div>
+          <div style="width:52px; text-align:center; font-size:0.75rem; color:var(--orange); font-family:monospace;">-2</div>
+          <div style="width:52px; text-align:center; font-size:0.75rem; color:var(--orange); font-family:monospace;">-1</div>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <pre><span class="code-var">texto</span> = <span class="code-str">"Python"</span>
+
+<span class="code-fn">print</span>(<span class="code-var">texto</span>[<span class="code-num">0</span>])    <span class="code-cmt"># P  — primer carácter</span>
+<span class="code-fn">print</span>(<span class="code-var">texto</span>[<span class="code-num">-1</span>])   <span class="code-cmt"># n  — último carácter</span>
+<span class="code-fn">print</span>(<span class="code-var">texto</span>[<span class="code-num">1</span>:<span class="code-num">4</span>])  <span class="code-cmt"># yth — del índice 1 al 3</span>
+<span class="code-fn">print</span>(<span class="code-var">texto</span>[:<span class="code-num">3</span>])   <span class="code-cmt"># Pyt — desde el inicio</span>
+<span class="code-fn">print</span>(<span class="code-var">texto</span>[<span class="code-num">3</span>:])   <span class="code-cmt"># hon — hasta el final</span>
+<span class="code-fn">print</span>(<span class="code-var">texto</span>[::<span class="code-num">-1</span>]) <span class="code-cmt"># nohtyP — invertido</span></pre>
+        <div style="display:flex; flex-direction:column; gap:10px;">
+          <div class="callout">
+            <strong>Sintaxis slicing:</strong><br/>
+            <code style="color:var(--blue);">texto[inicio : fin : paso]</code><br/>
+            <span style="font-size:0.85rem; color:var(--muted);">El índice <strong>fin</strong> no se incluye.</span>
+          </div>
+          <div class="callout-warn callout">
+            <strong style="color:var(--orange);">⚠️ Strings son inmutables</strong><br/>
+            <code style="color:var(--red);">texto[0] = "J"</code> → Error<br/>
+            <span style="font-size:0.85rem; color:var(--muted);">No puedes cambiar caracteres individuales. Debes crear un string nuevo.</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 5. MÉTODOS STRING -->
+  <div class="slide">
+    <div class="slide-header"><h2>🔧 Métodos comunes de strings</h2><div class="slide-header-line"></div></div>
+    <div class="grid-2">
+      <table class="clean">
+        <tr><th>Método</th><th>Ejemplo</th><th>Resultado</th></tr>
+        <tr><td><code class="badge">.upper()</code></td><td><code>"hola".upper()</code></td><td><code>"HOLA"</code></td></tr>
+        <tr><td><code class="badge">.lower()</code></td><td><code>"PYTHON".lower()</code></td><td><code>"python"</code></td></tr>
+        <tr><td><code class="badge">.capitalize()</code></td><td><code>"python".capitalize()</code></td><td><code>"Python"</code></td></tr>
+        <tr><td><code class="badge">.title()</code></td><td><code>"hola mundo".title()</code></td><td><code>"Hola Mundo"</code></td></tr>
+        <tr><td><code class="badge">.strip()</code></td><td><code>"  hola  ".strip()</code></td><td><code>"hola"</code></td></tr>
+        <tr><td><code class="badge">.replace()</code></td><td><code>"hola mundo".replace("hola","hi")</code></td><td><code>"hi mundo"</code></td></tr>
+        <tr><td><code class="badge">.split()</code></td><td><code>"a,b,c".split(",")</code></td><td><code>["a","b","c"]</code></td></tr>
+        <tr><td><code class="badge">.find()</code></td><td><code>"python".find("th")</code></td><td><code>2</code></td></tr>
+        <tr><td><code class="badge">.startswith()</code></td><td><code>"python".startswith("py")</code></td><td><code>True</code></td></tr>
+        <tr><td><code class="badge">.endswith()</code></td><td><code>"archivo.txt".endswith(".txt")</code></td><td><code>True</code></td></tr>
+      </table>
+      <div style="display:flex; flex-direction:column; gap:14px;">
+        <p style="font-size:0.9rem; color:var(--muted);">Los métodos se llaman con <strong class="highlight">punto</strong> después del string o variable:</p>
+        <pre><span class="code-var">nombre</span> = <span class="code-str">"  jesus barros  "</span>
+<span class="code-fn">print</span>(<span class="code-var">nombre</span>.strip())         <span class="code-cmt"># "jesus barros"</span>
+<span class="code-fn">print</span>(<span class="code-var">nombre</span>.strip().title())  <span class="code-cmt"># "Jesus Barros"</span></pre>
+        <div class="callout">
+          <strong class="purple">Encadenamiento:</strong> Puedes llamar varios métodos seguidos. Se ejecutan de izquierda a derecha.
+        </div>
+        <div class="callout-green callout">
+          <strong class="green">¿Cuántos métodos tiene str?</strong><br/>
+          Más de 40. Pero con estos 10 resuelves el 90% de los casos reales.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 6. INT -->
+  <div class="slide">
+    <div class="slide-header"><h2>🔢 Integer <span class="badge">int</span></h2><div class="slide-header-line"></div></div>
+    <div class="grid-2">
+      <div style="display:flex; flex-direction:column; gap:14px;">
+        <p>Números <strong class="gold">enteros</strong>, positivos o negativos, sin parte decimal. En Python no hay límite de tamaño para un entero.</p>
+        <pre><span class="code-var">a</span> = <span class="code-num">10</span>              <span class="code-cmt"># positivo</span>
+<span class="code-var">b</span> = <span class="code-num">-5</span>             <span class="code-cmt"># negativo</span>
+<span class="code-var">c</span> = <span class="code-num">0</span>               <span class="code-cmt"># cero</span>
+<span class="code-var">d</span> = <span class="code-num">123456789012345</span> <span class="code-cmt"># muy grande: sin problema</span></pre>
+        <div class="callout-warn callout">
+          <strong style="color:var(--orange);">⚠️ Python NO tiene <code>++</code> ni <code>--</code></strong><br/>
+          Esos operadores son de JavaScript/C.<br/>
+          En Python se usa: <code style="color:var(--green);">x += 1</code> y <code style="color:var(--green);">x -= 1</code>
+        </div>
+      </div>
+      <div>
+        <table class="clean">
+          <tr><th>Operador</th><th>Símbolo</th><th>Ejemplo</th><th>Resultado</th></tr>
+          <tr><td>Suma</td><td><span class="badge">+</span></td><td><code>5 + 3</code></td><td><strong class="green">8</strong></td></tr>
+          <tr><td>Resta</td><td><span class="badge">-</span></td><td><code>10 - 4</code></td><td><strong class="green">6</strong></td></tr>
+          <tr><td>Multiplicación</td><td><span class="badge">*</span></td><td><code>6 * 3</code></td><td><strong class="green">18</strong></td></tr>
+          <tr><td>División</td><td><span class="badge">/</span></td><td><code>10 / 4</code></td><td><strong class="green">2.5</strong></td></tr>
+          <tr><td>División entera</td><td><span class="badge">//</span></td><td><code>10 // 3</code></td><td><strong class="green">3</strong></td></tr>
+          <tr><td>Módulo (residuo)</td><td><span class="badge">%</span></td><td><code>10 % 3</code></td><td><strong class="green">1</strong></td></tr>
+          <tr><td>Potenciación</td><td><span class="badge">**</span></td><td><code>2 ** 8</code></td><td><strong class="green">256</strong></td></tr>
+          <tr><td>Incrementar</td><td><span class="badge">+=</span></td><td><code>x += 1</code></td><td><strong class="green">x = x + 1</strong></td></tr>
+          <tr><td>Decrementar</td><td><span class="badge">-=</span></td><td><code>x -= 1</code></td><td><strong class="green">x = x − 1</strong></td></tr>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- 7. FLOAT -->
+  <div class="slide">
+    <div class="slide-header"><h2>📐 Float <span class="badge">float</span></h2><div class="slide-header-line"></div></div>
+    <div class="grid-2">
+      <div style="display:flex; flex-direction:column; gap:14px;">
+        <p>Números con <strong class="orange">parte decimal</strong>. Python los almacena como punto flotante de 64 bits (doble precisión).</p>
+        <pre><span class="code-var">pi</span>      = <span class="code-num">3.14159</span>
+<span class="code-var">precio</span>  = <span class="code-num">9.99</span>
+<span class="code-var">negativo</span>= <span class="code-num">-0.5</span>
+<span class="code-var">grande</span>  = <span class="code-num">1.5e10</span>   <span class="code-cmt"># notación científica = 15,000,000,000</span>
+
+<span class="code-cmt"># División SIEMPRE produce float</span>
+<span class="code-fn">print</span>(<span class="code-num">10</span> / <span class="code-num">2</span>)    <span class="code-cmt"># 5.0 — no 5</span>
+<span class="code-fn">print</span>(<span class="code-num">10</span> // <span class="code-num">2</span>)   <span class="code-cmt"># 5  — división entera</span></pre>
+        <div class="callout-warn callout">
+          <strong style="color:var(--orange);">⚠️ Precisión de float</strong><br/>
+          <code>0.1 + 0.2</code> → <strong>0.30000000000000004</strong><br/>
+          <span style="font-size:0.85rem; color:var(--muted);">Limitación del hardware, no de Python. Para dinero usar <code>decimal.Decimal</code>.</span>
+        </div>
+      </div>
+      <div style="display:flex; flex-direction:column; gap:14px;">
+        <p style="font-size:0.9rem; color:var(--muted);">Conversión entre tipos numéricos:</p>
+        <pre><span class="code-var">x</span> = <span class="code-num">5</span>
+<span class="code-fn">print</span>(<span class="code-fn">float</span>(<span class="code-var">x</span>))   <span class="code-cmt"># 5.0 — int a float</span>
+
+<span class="code-var">y</span> = <span class="code-num">3.9</span>
+<span class="code-fn">print</span>(<span class="code-fn">int</span>(<span class="code-var">y</span>))     <span class="code-cmt"># 3   — trunca, no redondea</span>
+
+<span class="code-fn">print</span>(<span class="code-fn">round</span>(<span class="code-num">3.9</span>)) <span class="code-cmt"># 4   — redondear</span>
+<span class="code-fn">print</span>(<span class="code-fn">round</span>(<span class="code-num">3.14159</span>, <span class="code-num">2</span>)) <span class="code-cmt"># 3.14</span></pre>
+        <div class="card card-accent-orange">
+          <h3>Funciones útiles con números</h3>
+          <ul class="clean" style="margin-top:8px;">
+            <li><code>abs(-5)</code> → <strong>5</strong> (valor absoluto)</li>
+            <li><code>max(3, 7, 1)</code> → <strong>7</strong></li>
+            <li><code>min(3, 7, 1)</code> → <strong>1</strong></li>
+            <li><code>sum([1,2,3])</code> → <strong>6</strong></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 8. BOOL -->
+  <div class="slide">
+    <div class="slide-header"><h2>✅ Boolean <span class="badge">bool</span></h2><div class="slide-header-line"></div></div>
+    <div class="grid-2">
+      <div style="display:flex; flex-direction:column; gap:14px;">
+        <p>Solo dos valores posibles: <code style="color:var(--green); font-weight:900;">True</code> o <code style="color:var(--red); font-weight:900;">False</code>. La base de toda lógica condicional. <strong>Con mayúscula inicial en Python.</strong></p>
+        <pre><span class="code-var">activo</span>   = <span class="code-bool">True</span>
+<span class="code-var">bloqueado</span>= <span class="code-bool">False</span>
+
+<span class="code-cmt"># Cualquier valor puede convertirse a bool</span>
+<span class="code-fn">print</span>(<span class="code-fn">bool</span>(<span class="code-num">0</span>))        <span class="code-cmt"># False</span>
+<span class="code-fn">print</span>(<span class="code-fn">bool</span>(<span class="code-num">1</span>))        <span class="code-cmt"># True</span>
+<span class="code-fn">print</span>(<span class="code-fn">bool</span>(<span class="code-str">""</span>))       <span class="code-cmt"># False — string vacío</span>
+<span class="code-fn">print</span>(<span class="code-fn">bool</span>(<span class="code-str">"hola"</span>))   <span class="code-cmt"># True</span>
+<span class="code-fn">print</span>(<span class="code-fn">bool</span>([]))       <span class="code-cmt"># False — lista vacía</span>
+<span class="code-fn">print</span>(<span class="code-fn">bool</span>([<span class="code-num">1</span>,<span class="code-num">2</span>]))    <span class="code-cmt"># True</span></pre>
+      </div>
+      <div style="display:flex; flex-direction:column; gap:14px;">
+        <p style="font-size:0.9rem; color:var(--muted);">Valores que Python considera <strong class="red">False</strong>:</p>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+          <div class="callout-red callout" style="text-align:center;"><code style="color:var(--red); font-size:1rem;">0</code><br/><span style="font-size:0.8rem;">cero entero</span></div>
+          <div class="callout-red callout" style="text-align:center;"><code style="color:var(--red); font-size:1rem;">0.0</code><br/><span style="font-size:0.8rem;">cero flotante</span></div>
+          <div class="callout-red callout" style="text-align:center;"><code style="color:var(--red); font-size:1rem;">""</code><br/><span style="font-size:0.8rem;">string vacío</span></div>
+          <div class="callout-red callout" style="text-align:center;"><code style="color:var(--red); font-size:1rem;">None</code><br/><span style="font-size:0.8rem;">nulo</span></div>
+          <div class="callout-red callout" style="text-align:center;"><code style="color:var(--red); font-size:1rem;">[]</code><br/><span style="font-size:0.8rem;">lista vacía</span></div>
+          <div class="callout-red callout" style="text-align:center;"><code style="color:var(--red); font-size:1rem;">{}</code><br/><span style="font-size:0.8rem;">dict vacío</span></div>
+        </div>
+        <div class="callout-green callout">
+          Todo lo demás es <strong class="green">True</strong>. Un número distinto de 0, un string con texto, una lista con elementos.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 9. OPERADORES LÓGICOS -->
+  <div class="slide">
+    <div class="slide-header"><h2>🧠 Operadores lógicos y de comparación</h2><div class="slide-header-line"></div></div>
+    <div class="grid-2">
+      <div style="display:flex; flex-direction:column; gap:16px;">
+        <p style="font-size:0.9rem; color:var(--muted);">Operadores lógicos — combinan condiciones:</p>
+        <table class="clean">
+          <tr><th>Operador</th><th>Significado</th><th>Ejemplo</th><th>Resultado</th></tr>
+          <tr><td><span class="badge">and</span></td><td>Y lógico</td><td><code>True and False</code></td><td><strong class="red">False</strong></td></tr>
+          <tr><td><span class="badge">or</span></td><td>O lógico</td><td><code>True or False</code></td><td><strong class="green">True</strong></td></tr>
+          <tr><td><span class="badge">not</span></td><td>Negación</td><td><code>not True</code></td><td><strong class="red">False</strong></td></tr>
+        </table>
+        <pre><span class="code-var">edad</span>    = <span class="code-num">20</span>
+<span class="code-var">tiene_id</span>= <span class="code-bool">True</span>
+
+<span class="code-cmt"># and: ambas condiciones deben ser True</span>
+<span class="code-fn">print</span>(<span class="code-var">edad</span> >= <span class="code-num">18</span> <span class="code-kw">and</span> <span class="code-var">tiene_id</span>)  <span class="code-cmt"># True</span>
+
+<span class="code-cmt"># or: basta con que una sea True</span>
+<span class="code-fn">print</span>(<span class="code-var">edad</span> < <span class="code-num">18</span> <span class="code-kw">or</span> <span class="code-var">tiene_id</span>)   <span class="code-cmt"># True</span></pre>
+      </div>
+      <div style="display:flex; flex-direction:column; gap:16px;">
+        <p style="font-size:0.9rem; color:var(--muted);">Operadores de comparación — producen bool:</p>
+        <table class="clean">
+          <tr><th>Operador</th><th>Significado</th><th>Ejemplo</th><th>Resultado</th></tr>
+          <tr><td><span class="badge">==</span></td><td>Igual a</td><td><code>5 == 5</code></td><td><strong class="green">True</strong></td></tr>
+          <tr><td><span class="badge">!=</span></td><td>Distinto de</td><td><code>5 != 3</code></td><td><strong class="green">True</strong></td></tr>
+          <tr><td><span class="badge">></span></td><td>Mayor que</td><td><code>8 > 5</code></td><td><strong class="green">True</strong></td></tr>
+          <tr><td><span class="badge"><</span></td><td>Menor que</td><td><code>3 < 7</code></td><td><strong class="green">True</strong></td></tr>
+          <tr><td><span class="badge">>=</span></td><td>Mayor o igual</td><td><code>5 >= 5</code></td><td><strong class="green">True</strong></td></tr>
+          <tr><td><span class="badge"><=</span></td><td>Menor o igual</td><td><code>6 <= 4</code></td><td><strong class="red">False</strong></td></tr>
+        </table>
+        <div class="callout-warn callout">
+          <strong style="color:var(--orange);">⚠️ Python NO tiene <code>===</code> ni <code>!==</code></strong><br/>
+          Eso es JavaScript. En Python <code>==</code> ya compara valor <strong>y</strong> tipo.<br/>
+          <code>5 == "5"</code> → <strong class="red">False</strong> (int ≠ str)
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 10. NONE -->
+  <div class="slide">
+    <div class="slide-header"><h2>∅ NoneType <span class="badge">None</span></h2><div class="slide-header-line"></div></div>
+    <div class="grid-2">
+      <div style="display:flex; flex-direction:column; gap:16px;">
+        <p><strong class="purple">None</strong> representa la <strong>ausencia de valor</strong>. Es el equivalente a <code>null</code> en otros lenguajes. No es 0, no es <code>""</code>, no es <code>False</code> — es literalmente la nada.</p>
+        <pre><span class="code-var">resultado</span> = <span class="code-bool">None</span>
+
+<span class="code-fn">print</span>(<span class="code-var">resultado</span>)          <span class="code-cmt"># None</span>
+<span class="code-fn">print</span>(<span class="code-fn">type</span>(<span class="code-var">resultado</span>))    <span class="code-cmt"># &lt;class 'NoneType'&gt;</span>
+
+<span class="code-cmt"># Comparar con None → usar "is", no "=="</span>
+<span class="code-fn">print</span>(<span class="code-var">resultado</span> <span class="code-kw">is</span> <span class="code-bool">None</span>)  <span class="code-cmt"># True ✓ forma correcta</span>
+<span class="code-fn">print</span>(<span class="code-var">resultado</span> == <span class="code-bool">None</span>) <span class="code-cmt"># True  (funciona pero no recomendado)</span></pre>
+      </div>
+      <div style="display:flex; flex-direction:column; gap:14px;">
+        <p style="font-size:0.9rem; color:var(--muted);">¿Cuándo aparece None en la práctica?</p>
+        <ul class="clean">
+          <li>Una función que no retorna nada devuelve <code style="color:var(--purple);">None</code> implícitamente.</li>
+          <li>Variable que todavía no tiene valor asignado.</li>
+          <li>Resultado de búsqueda que no encontró nada.</li>
+        </ul>
+        <pre><span class="code-kw">def</span> <span class="code-fn">sin_retorno</span>():
+    <span class="code-fn">print</span>(<span class="code-str">"Hola"</span>)
+    <span class="code-cmt"># No hay return</span>
+
+<span class="code-var">x</span> = <span class="code-fn">sin_retorno</span>()
+<span class="code-fn">print</span>(<span class="code-var">x</span>)   <span class="code-cmt"># None</span></pre>
+      </div>
+    </div>
+  </div>
+
+  <!-- 11. TYPE CASTING -->
+  <div class="slide">
+    <div class="slide-header"><h2>🔄 Conversión de tipos (Type Casting)</h2><div class="slide-header-line"></div></div>
+    <div class="grid-2">
+      <div style="display:flex; flex-direction:column; gap:14px;">
+        <p>Python permite convertir valores de un tipo a otro usando funciones nativas.</p>
+        <pre><span class="code-cmt"># str → int</span>
+<span class="code-var">edad_texto</span> = <span class="code-str">"25"</span>
+<span class="code-var">edad</span>       = <span class="code-fn">int</span>(<span class="code-var">edad_texto</span>)   <span class="code-cmt"># 25</span>
+
+<span class="code-cmt"># int → str</span>
+<span class="code-var">numero</span>     = <span class="code-num">42</span>
+<span class="code-var">texto</span>      = <span class="code-fn">str</span>(<span class="code-var">numero</span>)       <span class="code-cmt"># "42"</span>
+
+<span class="code-cmt"># str → float</span>
+<span class="code-var">precio_txt</span> = <span class="code-str">"9.99"</span>
+<span class="code-var">precio</span>     = <span class="code-fn">float</span>(<span class="code-var">precio_txt</span>) <span class="code-cmt"># 9.99</span>
+
+<span class="code-cmt"># input() SIEMPRE devuelve str</span>
+<span class="code-var">edad_raw</span>   = <span class="code-fn">input</span>(<span class="code-str">"Tu edad: "</span>)
+<span class="code-var">edad</span>       = <span class="code-fn">int</span>(<span class="code-var">edad_raw</span>)      <span class="code-cmt"># convertir antes de operar</span></pre>
+      </div>
+      <div style="display:flex; flex-direction:column; gap:14px;">
+        <p style="font-size:0.9rem; color:var(--muted);">Conversiones que funcionan:</p>
+        <table class="clean">
+          <tr><th>De</th><th>A</th><th>Función</th><th>¿Siempre funciona?</th></tr>
+          <tr><td>str <code>"25"</code></td><td>int</td><td><code>int()</code></td><td><span style="color:var(--green);">Si es número entero</span></td></tr>
+          <tr><td>str <code>"3.14"</code></td><td>float</td><td><code>float()</code></td><td><span style="color:var(--green);">Si es número</span></td></tr>
+          <tr><td>int <code>42</code></td><td>str</td><td><code>str()</code></td><td><span style="color:var(--green);">Siempre</span></td></tr>
+          <tr><td>float <code>3.9</code></td><td>int</td><td><code>int()</code></td><td><span style="color:var(--gold);">Trunca decimales</span></td></tr>
+          <tr><td>str <code>"hola"</code></td><td>int</td><td><code>int()</code></td><td><span style="color:var(--red);">Error — no es número</span></td></tr>
+        </table>
+        <div class="callout-warn callout">
+          <code style="color:var(--red);">int("hola")</code> → <strong>ValueError</strong><br/>
+          Solo conviertes texto a número si el texto contiene un número.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 12. RESUMEN -->
+  <div class="slide">
+    <div class="slide-header"><h2>📋 Resumen — Datos Primitivos</h2><div class="slide-header-line"></div></div>
+    <table class="clean" style="font-size:0.88rem; margin-bottom:20px;">
+      <tr><th>Tipo</th><th>Clase</th><th>Ejemplos</th><th>Uso típico</th><th>Conversión</th></tr>
+      <tr>
+        <td><strong class="highlight">String</strong></td>
+        <td><span class="badge" style="color:var(--blue);">str</span></td>
+        <td><code>"hola"</code>, <code>'Python'</code></td>
+        <td>Nombres, mensajes, texto</td>
+        <td><code>str(42)</code> → <code>"42"</code></td>
+      </tr>
+      <tr>
+        <td><strong class="gold">Entero</strong></td>
+        <td><span class="badge" style="color:var(--gold);">int</span></td>
+        <td><code>42</code>, <code>-5</code>, <code>0</code></td>
+        <td>Contadores, edades, índices</td>
+        <td><code>int("25")</code> → <code>25</code></td>
+      </tr>
+      <tr>
+        <td><strong class="orange">Decimal</strong></td>
+        <td><span class="badge" style="color:var(--orange);">float</span></td>
+        <td><code>3.14</code>, <code>-0.5</code></td>
+        <td>Precios, medidas, porcentajes</td>
+        <td><code>float("3.14")</code> → <code>3.14</code></td>
+      </tr>
+      <tr>
+        <td><strong class="green">Booleano</strong></td>
+        <td><span class="badge" style="color:var(--green);">bool</span></td>
+        <td><code>True</code>, <code>False</code></td>
+        <td>Condiciones, flags, estados</td>
+        <td><code>bool(0)</code> → <code>False</code></td>
+      </tr>
+      <tr>
+        <td><strong style="color:var(--muted);">Nulo</strong></td>
+        <td><span class="badge">None</span></td>
+        <td><code>None</code></td>
+        <td>Ausencia de valor, inicializar</td>
+        <td>—</td>
+      </tr>
+    </table>
+    <div class="grid-3">
+      <div class="callout">
+        <strong class="purple">type()</strong> — identifica el tipo de cualquier valor en tiempo de ejecución.
+      </div>
+      <div class="callout">
+        <strong class="highlight">int(), float(), str(), bool()</strong> — convierten entre tipos.
+      </div>
+      <div class="callout-green callout">
+        <strong class="green">input()</strong> siempre devuelve <code>str</code>. Convertir antes de hacer operaciones numéricas.
+      </div>
+    </div>
+  </div>
+
+  <!-- 13. ACTIVIDAD -->
+  <div class="slide">
+    <div class="slide-header"><h2>💻 Actividad — Tipos en acción</h2><div class="slide-header-line"></div></div>
+    <div class="grid-2">
+      <div style="display:flex; flex-direction:column; gap:14px;">
+        <div class="callout-green callout">
+          <strong class="green">Objetivo:</strong> Crear un programa que pida datos al usuario, opere con ellos y muestre resultados usando todos los tipos primitivos.
+        </div>
+        <ul class="clean">
+          <li>Pide nombre, edad y precio de un producto con <code>input()</code></li>
+          <li>Convierte edad a <code>int</code> y precio a <code>float</code></li>
+          <li>Calcula: precio con 19% de IVA</li>
+          <li>Calcula: cuántos años faltan para cumplir 100</li>
+          <li>Imprime todo formateado con f-strings</li>
+          <li>Imprime el tipo de cada variable con <code>type()</code></li>
+        </ul>
+        <div class="callout">
+          <strong>Reto extra:</strong> Convierte el nombre a mayúsculas y muestra cuántas letras tiene (sin contar espacios con <code>.replace()</code>).
+        </div>
+      </div>
+      <pre><span class="code-cmt"># Código base — completa los ___</span>
+
+<span class="code-var">nombre</span> = <span class="code-fn">input</span>(<span class="code-str">"Tu nombre: "</span>)
+<span class="code-var">edad</span>   = <span class="code-fn">___</span>(<span class="code-fn">input</span>(<span class="code-str">"Tu edad: "</span>))
+<span class="code-var">precio</span> = <span class="code-fn">___</span>(<span class="code-fn">input</span>(<span class="code-str">"Precio producto: "</span>))
+
+<span class="code-var">precio_iva</span>   = ___
+<span class="code-var">años_a_100</span>   = ___
+
+<span class="code-fn">print</span>(<span class="code-str">"=" * 35</span>)
+<span class="code-fn">print</span>(<span class="code-str">f"Hola, <span class="code-var">{___}</span>"</span>)
+<span class="code-fn">print</span>(<span class="code-str">f"Edad: <span class="code-var">{edad}</span>"</span>)
+<span class="code-fn">print</span>(<span class="code-str">f"Para los 100: <span class="code-var">{___}</span> años"</span>)
+<span class="code-fn">print</span>(<span class="code-str">f"Precio + IVA: $<span class="code-var">{___:.2f}</span>"</span>)
+<span class="code-fn">print</span>(<span class="code-str">"=" * 35</span>)
+
+<span class="code-cmt"># Verificar tipos</span>
+<span class="code-fn">print</span>(<span class="code-fn">type</span>(<span class="code-var">nombre</span>), <span class="code-fn">type</span>(<span class="code-var">edad</span>), <span class="code-fn">type</span>(<span class="code-var">precio</span>))</pre>
+    </div>
+  </div>
+
+  <!-- 14. CIERRE -->
+  <div class="slide slide-title">
+    <div style="font-size:3.5rem; margin-bottom:16px;">🔢</div>
+    <h1>¿Preguntas?</h1>
+    <p class="title-sub" style="max-width:540px; text-align:center; margin-top:12px;">
+      Próxima clase: <span class="highlight">Variables en Python</span><br/>
+      <span style="font-size:0.95rem;">Cómo nombrar, asignar y reutilizar datos en tus programas.</span>
+    </p>
+    <div style="display:flex; gap:14px; margin-top:28px; flex-wrap:wrap; justify-content:center;">
+      <div class="callout" style="font-size:0.85rem; padding:10px 18px;">📌 Tarea: Completar actividad y probar todos los type()</div>
+    </div>
+    <span class="title-tag" style="margin-top:20px;">Módulo 2 — Completado</span>
+  </div>
+
+</div><!-- /slides-wrapper -->
+<div class="key-hint">← → para navegar</div>
+
+<script>
+  const STORAGE_KEY = 'slide_' + location.pathname;
+  const slides = document.querySelectorAll('.slide');
+  const total  = slides.length;
+  let current  = Math.min(parseInt(localStorage.getItem(STORAGE_KEY) || '0', 10), total - 1);
+
+  function updateUI() {
+    slides.forEach((s, i) => s.classList.toggle('active', i === current));
+    document.getElementById('counter').textContent  = `${current + 1} / ${total}`;
+    document.getElementById('progress').style.width = `${((current + 1) / total) * 100}%`;
+    document.getElementById('prevBtn').disabled = current === 0;
+    document.getElementById('nextBtn').disabled = current === total - 1;
+    localStorage.setItem(STORAGE_KEY, current);
+  }
+
+  function changeSlide(dir) {
+    const next = current + dir;
+    if (next >= 0 && next < total) { current = next; updateUI(); }
+  }
+
+  document.addEventListener('keydown', e => {
+    if (e.key === 'ArrowRight' || e.key === 'ArrowDown') changeSlide(1);
+    if (e.key === 'ArrowLeft'  || e.key === 'ArrowUp')   changeSlide(-1);
+  });
+
+  updateUI();
+</script>
+</body>
+</html>

@@ -1,0 +1,1140 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ejercicios Interactivos — Métodos de Listas · Python</title>
+
+<!-- CodeMirror 5 -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/theme/dracula.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/python/python.min.js"></script>
+
+<!-- Pyodide -->
+<script src="https://cdn.jsdelivr.net/pyodide/v0.26.2/full/pyodide.js"></script>
+
+<style>
+:root {
+  --bg:      #0d1117;
+  --surface: #161b22;
+  --border:  #30363d;
+  --text:    #e6edf3;
+  --muted:   #8b949e;
+  --green:   #3fb950;
+  --teal:    #39d5c3;
+  --blue:    #58a6ff;
+  --gold:    #d29922;
+  --red:     #f85149;
+  --orange:  #f0883e;
+  --purple:  #bc8cff;
+  --header-h: 56px;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Segoe UI', system-ui, sans-serif;
+  height: 100vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── LOADING OVERLAY ── */
+#loading-overlay {
+  position: fixed;
+  inset: 0;
+  background: var(--bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 1.2rem;
+  z-index: 999;
+}
+#loading-overlay.hidden { display: none; }
+.spinner {
+  width: 48px; height: 48px;
+  border: 4px solid var(--border);
+  border-top-color: var(--green);
+  border-radius: 50%;
+  animation: spin 0.9s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+#loading-overlay p  { font-size: 1.1rem; color: var(--text); }
+#loading-overlay small { color: var(--muted); font-size: .85rem; }
+
+/* ── HEADER ── */
+header {
+  height: var(--header-h);
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 1.2rem;
+  flex-shrink: 0;
+  gap: 1rem;
+}
+.header-left { display: flex; align-items: center; gap: .9rem; flex-wrap: wrap; }
+.back-link {
+  font-size: .8rem; color: var(--muted);
+  text-decoration: none;
+  display: flex; align-items: center; gap: .3rem;
+}
+.back-link:hover { color: var(--text); }
+.module-tag {
+  font-size: .72rem; font-weight: 700; letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--orange); background: rgba(240,136,62,.12);
+  border: 1px solid rgba(240,136,62,.3);
+  padding: .2rem .65rem; border-radius: 999px;
+}
+header h1 { font-size: 1rem; font-weight: 600; white-space: nowrap; }
+
+.header-right { display: flex; align-items: center; gap: .8rem; flex-shrink: 0; }
+#progress-text { font-size: .82rem; color: var(--muted); white-space: nowrap; }
+.progress-bar-wrap {
+  width: 120px; height: 6px;
+  background: var(--border); border-radius: 3px; overflow: hidden;
+}
+#progress-fill {
+  height: 100%; width: 0%;
+  background: linear-gradient(90deg, var(--orange), var(--gold));
+  transition: width .4s ease;
+}
+
+/* ── MAIN LAYOUT ── */
+.app-layout {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 240px 1fr;
+  overflow: hidden;
+}
+
+/* ── SIDEBAR ── */
+aside {
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+.sidebar-title {
+  padding: .9rem 1rem .5rem;
+  font-size: .72rem; font-weight: 700;
+  text-transform: uppercase; letter-spacing: .12em;
+  color: var(--muted);
+  border-bottom: 1px solid var(--border);
+}
+.ex-item {
+  display: flex; align-items: center; gap: .65rem;
+  padding: .7rem 1rem;
+  cursor: pointer;
+  border-bottom: 1px solid rgba(48,54,61,.5);
+  transition: background .15s;
+  font-size: .88rem;
+}
+.ex-item:hover { background: rgba(255,255,255,.04); }
+.ex-item.active { background: rgba(240,136,62,.1); border-left: 3px solid var(--orange); }
+.ex-item.done   { opacity: .85; }
+.ex-icon { font-size: .95rem; flex-shrink: 0; width: 18px; text-align: center; }
+.ex-label { flex: 1; line-height: 1.3; }
+.ex-label .method-name { font-weight: 600; display: block; }
+.ex-label .method-desc { font-size: .78rem; color: var(--muted); }
+
+/* ── EXERCISE PANEL ── */
+main {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.ex-panel {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+  gap: 0;
+}
+
+/* Description pane */
+.desc-pane {
+  width: 320px;
+  flex-shrink: 0;
+  border-right: 1px solid var(--border);
+  overflow-y: auto;
+  padding: 1.4rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+.ex-header { display: flex; align-items: center; gap: .6rem; flex-wrap: wrap; }
+.ex-header h2 { font-size: 1.25rem; font-weight: 700; }
+.badge {
+  font-size: .7rem; font-weight: 700; padding: .2em .55em;
+  border-radius: 4px; text-transform: uppercase; letter-spacing: .06em;
+}
+.badge-green  { background: rgba(63,185,80,.2);  color: var(--green); }
+.badge-gold   { background: rgba(210,153,34,.2); color: var(--gold); }
+.badge-red    { background: rgba(248,81,73,.2);  color: var(--red); }
+
+.desc-pane p  { font-size: .93rem; color: var(--muted); line-height: 1.65; }
+.desc-pane p strong { color: var(--text); }
+.desc-pane code {
+  font-family: 'Cascadia Code', 'Fira Code', monospace;
+  font-size: .88em;
+  background: rgba(255,255,255,.07);
+  padding: .1em .35em; border-radius: 4px;
+  color: var(--teal);
+}
+.syntax-box {
+  background: #010409; border: 1px solid var(--border);
+  border-radius: 8px; padding: .8rem 1rem;
+  font-family: 'Cascadia Code', monospace; font-size: .9rem;
+  color: var(--text);
+}
+.syntax-box .method { color: var(--purple); }
+.task-label {
+  font-size: .72rem; font-weight: 700; letter-spacing: .1em;
+  text-transform: uppercase; color: var(--orange);
+  margin-bottom: .3rem;
+}
+.task-box {
+  background: rgba(240,136,62,.07);
+  border: 1px solid rgba(240,136,62,.25);
+  border-radius: 8px; padding: .9rem 1rem;
+  font-size: .92rem; line-height: 1.6;
+  color: var(--text);
+}
+.task-box code { color: var(--gold); background: rgba(210,153,34,.15); }
+
+.hint-toggle {
+  background: none; border: 1px solid var(--border);
+  color: var(--muted); padding: .45rem .8rem;
+  border-radius: 6px; cursor: pointer; font-size: .83rem;
+  transition: all .15s;
+}
+.hint-toggle:hover { border-color: var(--teal); color: var(--teal); }
+.hint-box {
+  background: rgba(57,213,195,.07);
+  border: 1px solid rgba(57,213,195,.25);
+  border-radius: 8px; padding: .8rem 1rem;
+  font-size: .88rem; color: #39d5c3; line-height: 1.6;
+  display: none;
+}
+.hint-box.visible { display: block; }
+.hint-box code { color: var(--gold); background: rgba(210,153,34,.12); }
+
+.sol-toggle {
+  background: none; border: 1px solid var(--border);
+  color: var(--muted); padding: .45rem .8rem;
+  border-radius: 6px; cursor: pointer; font-size: .83rem;
+  transition: all .15s; margin-top: -.4rem;
+}
+.sol-toggle:hover { border-color: var(--purple); color: var(--purple); }
+.sol-box {
+  background: rgba(188,140,255,.06);
+  border: 1px solid rgba(188,140,255,.2);
+  border-radius: 8px; padding: .8rem 1rem;
+  font-size: .85rem; display: none;
+}
+.sol-box.visible { display: block; }
+.sol-box pre {
+  background: transparent; border: none; padding: 0;
+  font-family: 'Cascadia Code', monospace;
+  white-space: pre; overflow-x: auto; color: var(--text);
+  font-size: .85rem;
+}
+
+/* Editor + output pane */
+.editor-pane {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.editor-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: .5rem 1rem;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+}
+.editor-header span { font-size: .75rem; color: var(--muted); }
+.editor-actions { display: flex; gap: .5rem; }
+.btn-run {
+  background: var(--green); color: #000;
+  border: none; padding: .4rem 1rem;
+  border-radius: 6px; cursor: pointer; font-size: .85rem; font-weight: 700;
+  transition: background .15s;
+}
+.btn-run:hover { background: #4ccc5c; }
+.btn-run:disabled { opacity: .5; cursor: not-allowed; }
+.btn-reset {
+  background: var(--border); color: var(--muted);
+  border: none; padding: .4rem .8rem;
+  border-radius: 6px; cursor: pointer; font-size: .82rem;
+  transition: all .15s;
+}
+.btn-reset:hover { background: #444c56; color: var(--text); }
+
+.editor-wrap {
+  flex: 1;
+  overflow: hidden;
+  position: relative;
+}
+
+/* CodeMirror overrides */
+.CodeMirror {
+  height: 100% !important;
+  background: #010409 !important;
+  color: #e6edf3 !important;
+  font-family: 'Cascadia Code', 'Fira Code', 'Consolas', monospace !important;
+  font-size: .88rem !important;
+  line-height: 1.65 !important;
+  border: none !important;
+  border-radius: 0 !important;
+}
+.CodeMirror-scroll { padding-bottom: 0 !important; }
+.CodeMirror-gutters { background: #010409 !important; border-right: 1px solid #30363d !important; }
+.CodeMirror-linenumber { color: #484f58 !important; }
+.CodeMirror-cursor { border-left-color: #e6edf3 !important; }
+.CodeMirror-selected { background: rgba(88,166,255,.15) !important; }
+
+/* Output + tests */
+.output-pane {
+  height: 200px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+}
+.output-tabs {
+  display: flex;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+  flex-shrink: 0;
+}
+.tab-btn {
+  padding: .4rem 1rem; font-size: .8rem;
+  border: none; background: none; cursor: pointer;
+  color: var(--muted); border-bottom: 2px solid transparent;
+  transition: all .15s;
+}
+.tab-btn.active { color: var(--text); border-bottom-color: var(--orange); }
+.output-body { flex: 1; overflow-y: auto; padding: .7rem 1rem; }
+.output-body pre {
+  font-family: 'Cascadia Code', monospace; font-size: .82rem;
+  line-height: 1.6; white-space: pre-wrap; word-break: break-word;
+  color: var(--text);
+}
+.output-body .error { color: var(--red); }
+.output-placeholder { color: var(--muted); font-size: .85rem; font-style: italic; }
+
+/* Test results */
+.test-result {
+  display: flex; align-items: flex-start; gap: .6rem;
+  padding: .55rem .9rem;
+  border-radius: 8px; margin-bottom: .5rem;
+  font-size: .88rem;
+}
+.test-result.pass { background: rgba(63,185,80,.1); border: 1px solid rgba(63,185,80,.25); color: #9be9a8; }
+.test-result.fail { background: rgba(248,81,73,.1); border: 1px solid rgba(248,81,73,.25); color: #ffa198; }
+.test-result.running { background: rgba(88,166,255,.08); border: 1px solid rgba(88,166,255,.2); color: var(--blue); }
+.test-icon { font-size: 1rem; flex-shrink: 0; margin-top: .05rem; }
+.test-msg  { line-height: 1.5; }
+.test-msg code { background: rgba(255,255,255,.08); padding: .1em .3em; border-radius: 3px; font-size: .85em; }
+
+/* Nav footer */
+.nav-footer {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: .6rem 1rem;
+  border-top: 1px solid var(--border);
+  background: var(--surface);
+  flex-shrink: 0;
+}
+.btn-nav {
+  background: var(--border); color: var(--text);
+  border: none; padding: .4rem .9rem;
+  border-radius: 6px; cursor: pointer; font-size: .83rem;
+  transition: background .15s;
+}
+.btn-nav:hover:not(:disabled) { background: #444c56; }
+.btn-nav:disabled { opacity: .3; cursor: default; }
+.ex-counter { font-size: .82rem; color: var(--muted); }
+
+/* Completion banner */
+#completion-banner {
+  display: none;
+  background: rgba(63,185,80,.1);
+  border: 1px solid rgba(63,185,80,.3);
+  border-radius: 8px; padding: 1rem 1.2rem;
+  margin: .8rem; color: #9be9a8;
+  font-size: .95rem; text-align: center;
+  flex-shrink: 0;
+}
+#completion-banner strong { color: var(--green); }
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+</style>
+</head>
+<body>
+
+<!-- ── LOADING OVERLAY ── -->
+<div id="loading-overlay">
+  <div class="spinner"></div>
+  <p>Cargando intérprete de Python…</p>
+  <small>Primera carga puede tomar 10–20 segundos</small>
+</div>
+
+<!-- ── HEADER ── -->
+<header>
+  <div class="header-left">
+    <a href="../presentacion.html" class="back-link">← Presentación</a>
+    <span class="module-tag">Módulo 04 · Estructuras de Datos</span>
+    <h1>Ejercicios Interactivos — Métodos de Listas</h1>
+  </div>
+  <div class="header-right">
+    <span id="progress-text">0 / 10 completados</span>
+    <div class="progress-bar-wrap">
+      <div id="progress-fill"></div>
+    </div>
+  </div>
+</header>
+
+<!-- ── APP LAYOUT ── -->
+<div class="app-layout">
+
+  <!-- SIDEBAR -->
+  <aside>
+    <div class="sidebar-title">Ejercicios</div>
+    <div id="exercise-list"></div>
+  </aside>
+
+  <!-- MAIN PANEL -->
+  <main>
+    <div id="completion-banner">
+      🎉 <strong>¡Completaste todos los ejercicios!</strong> Dominas los métodos de listas en Python.
+    </div>
+
+    <div class="ex-panel">
+      <!-- Description -->
+      <div class="desc-pane" id="desc-pane"></div>
+
+      <!-- Editor + Output -->
+      <div class="editor-pane">
+        <div class="editor-header">
+          <span>Python · <kbd>Ctrl+Enter</kbd> para ejecutar</span>
+          <div class="editor-actions">
+            <button class="btn-reset" onclick="resetCode()">↺ Reiniciar</button>
+            <button class="btn-run" id="run-btn" onclick="runCode()">▶ Ejecutar</button>
+          </div>
+        </div>
+
+        <div class="editor-wrap">
+          <textarea id="code-editor"></textarea>
+        </div>
+
+        <div class="output-pane">
+          <div class="output-tabs">
+            <button class="tab-btn active" onclick="switchTab('output', this)">Salida</button>
+            <button class="tab-btn" onclick="switchTab('tests', this)">Resultados del test</button>
+          </div>
+          <div class="output-body" id="tab-output">
+            <span class="output-placeholder">Ejecuta el código para ver la salida…</span>
+          </div>
+          <div class="output-body" id="tab-tests" style="display:none">
+            <span class="output-placeholder">Ejecuta el código para ver los resultados…</span>
+          </div>
+        </div>
+
+        <div class="nav-footer">
+          <button class="btn-nav" id="prev-btn" onclick="goExercise(currentIdx - 1)">← Anterior</button>
+          <span class="ex-counter" id="ex-counter">Ejercicio 1 de 10</span>
+          <button class="btn-nav" id="next-btn" onclick="goExercise(currentIdx + 1)">Siguiente →</button>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script>
+/* ══════════════════════════════════════════════════════
+   EXERCISE DATA
+══════════════════════════════════════════════════════ */
+const EXERCISES = [
+  {
+    id: 1,
+    method: 'append()',
+    desc: 'Agregar al final',
+    difficulty: 'básico',
+    diffClass: 'badge-green',
+    description: `
+      <p>El método <code>append(x)</code> agrega el elemento <code>x</code> al <strong>final</strong> de la lista. No retorna nada (<code>None</code>).</p>
+      <div class="syntax-box">lista.<span class="method">append</span>(elemento)</div>
+      <div class="task-label">Tu tarea</div>
+      <div class="task-box">
+        Tienes una lista de frutas. Agrega <code>"mango"</code> y luego <code>"pera"</code> al final usando <code>append()</code>.
+        <br><br>La lista debe quedar:<br><code>["manzana", "banano", "uva", "mango", "pera"]</code>
+      </div>`,
+    starterCode: `frutas = ["manzana", "banano", "uva"]
+
+# Agrega "mango" al final de la lista
+
+
+# Agrega "pera" al final de la lista
+
+
+print(frutas)`,
+    testCode: `assert len(frutas) == 5, f"La lista debe tener 5 elementos, tiene {len(frutas)}"
+assert "mango" in frutas, "'mango' no está en la lista"
+assert "pera" in frutas, "'pera' no está en la lista"
+assert frutas[3] == "mango", f"La posición 3 debe ser 'mango', es '{frutas[3]}'"
+assert frutas[4] == "pera", f"La posición 4 debe ser 'pera', es '{frutas[4]}'"`,
+    hint: 'Escribe <code>frutas.append("mango")</code> y en la siguiente línea <code>frutas.append("pera")</code>.',
+    solution: `frutas = ["manzana", "banano", "uva"]
+
+frutas.append("mango")
+frutas.append("pera")
+
+print(frutas)`
+  },
+  {
+    id: 2,
+    method: 'insert()',
+    desc: 'Insertar en posición',
+    difficulty: 'básico',
+    diffClass: 'badge-green',
+    description: `
+      <p>El método <code>insert(i, x)</code> inserta el elemento <code>x</code> en la posición <code>i</code>. Los elementos existentes se desplazan a la derecha.</p>
+      <div class="syntax-box">lista.<span class="method">insert</span>(índice, elemento)</div>
+      <div class="task-label">Tu tarea</div>
+      <div class="task-box">
+        Inserta <code>"amarillo"</code> en la posición 1.
+        <br><br>Resultado esperado:<br><code>["rojo", "amarillo", "verde", "azul"]</code>
+      </div>`,
+    starterCode: `colores = ["rojo", "verde", "azul"]
+
+# Inserta "amarillo" en la posición 1
+
+
+print(colores)`,
+    testCode: `assert len(colores) == 4, f"La lista debe tener 4 elementos, tiene {len(colores)}"
+assert colores[0] == "rojo", "El primer elemento debe seguir siendo 'rojo'"
+assert colores[1] == "amarillo", f"La posición 1 debe ser 'amarillo', es '{colores[1]}'"
+assert colores[2] == "verde", "El orden debe ser: rojo, amarillo, verde, azul"
+assert colores[3] == "azul", "El último elemento debe ser 'azul'"`,
+    hint: 'Usa <code>colores.insert(1, "amarillo")</code>. El primer argumento es la posición, el segundo es el elemento.',
+    solution: `colores = ["rojo", "verde", "azul"]
+
+colores.insert(1, "amarillo")
+
+print(colores)`
+  },
+  {
+    id: 3,
+    method: 'remove()',
+    desc: 'Eliminar por valor',
+    difficulty: 'básico',
+    diffClass: 'badge-green',
+    description: `
+      <p>El método <code>remove(x)</code> elimina la <strong>primera aparición</strong> del valor <code>x</code>. Si el valor no existe, lanza <code>ValueError</code>.</p>
+      <div class="syntax-box">lista.<span class="method">remove</span>(valor)</div>
+      <div class="task-label">Tu tarea</div>
+      <div class="task-box">
+        Elimina <code>"leche"</code> y luego <code>"arroz"</code> de la lista de compras.
+        <br><br>Resultado esperado:<br><code>["pan", "queso", "pan"]</code>
+      </div>`,
+    starterCode: `compras = ["leche", "pan", "queso", "arroz", "pan"]
+
+# Elimina "leche"
+
+
+# Elimina "arroz"
+
+
+print(compras)`,
+    testCode: `assert "leche" not in compras, "'leche' debe haber sido eliminada"
+assert "arroz" not in compras, "'arroz' debe haber sido eliminado"
+assert compras.count("pan") == 2, f"Deben quedar 2 'pan', hay {compras.count('pan')}"
+assert "queso" in compras, "'queso' debe permanecer"
+assert len(compras) == 3, f"Deben quedar 3 elementos, hay {len(compras)}"`,
+    hint: 'Usa <code>compras.remove("leche")</code> y luego <code>compras.remove("arroz")</code>.',
+    solution: `compras = ["leche", "pan", "queso", "arroz", "pan"]
+
+compras.remove("leche")
+compras.remove("arroz")
+
+print(compras)`
+  },
+  {
+    id: 4,
+    method: 'pop()',
+    desc: 'Eliminar y retornar',
+    difficulty: 'básico',
+    diffClass: 'badge-green',
+    description: `
+      <p>El método <code>pop(i)</code> elimina el elemento en la posición <code>i</code> y lo <strong>retorna</strong>. Sin argumentos, elimina y retorna el último elemento.</p>
+      <div class="syntax-box">elemento = lista.<span class="method">pop</span>()&nbsp;&nbsp;&nbsp;<em style="color:#8b949e">← último</em><br>elemento = lista.<span class="method">pop</span>(índice)</div>
+      <div class="task-label">Tu tarea</div>
+      <div class="task-box">
+        1. Usa <code>pop()</code> para guardar el <strong>último</strong> número en <code>ultimo</code>.<br>
+        2. Usa <code>pop(0)</code> para guardar el <strong>primero</strong> en <code>primero</code>.<br><br>
+        Lista final: <code>[20, 30, 40]</code>
+      </div>`,
+    starterCode: `numeros = [10, 20, 30, 40, 50]
+
+# Guarda el ÚLTIMO elemento usando pop()
+ultimo = ___
+
+# Guarda el PRIMER elemento usando pop(0)
+primero = ___
+
+print(f"Último eliminado : {ultimo}")
+print(f"Primero eliminado: {primero}")
+print(f"Lista restante   : {numeros}")`,
+    testCode: `assert ultimo == 50, f"'ultimo' debe ser 50, es {ultimo}"
+assert primero == 10, f"'primero' debe ser 10, es {primero}"
+assert numeros == [20, 30, 40], f"La lista debe ser [20, 30, 40], es {numeros}"`,
+    hint: 'Escribe <code>ultimo = numeros.pop()</code> y luego <code>primero = numeros.pop(0)</code>. El orden importa.',
+    solution: `numeros = [10, 20, 30, 40, 50]
+
+ultimo  = numeros.pop()
+primero = numeros.pop(0)
+
+print(f"Último eliminado : {ultimo}")
+print(f"Primero eliminado: {primero}")
+print(f"Lista restante   : {numeros}")`
+  },
+  {
+    id: 5,
+    method: 'sort()',
+    desc: 'Ordenar la lista',
+    difficulty: 'básico',
+    diffClass: 'badge-green',
+    description: `
+      <p>El método <code>sort()</code> ordena la lista <strong>in-place</strong> (modifica la lista original). Por defecto ordena de menor a mayor.</p>
+      <div class="syntax-box">lista.<span class="method">sort</span>()&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<em style="color:#8b949e">← menor a mayor</em><br>lista.<span class="method">sort</span>(reverse=True)&nbsp;&nbsp;&nbsp;<em style="color:#8b949e">← mayor a menor</em></div>
+      <div class="task-label">Tu tarea</div>
+      <div class="task-box">
+        1. Ordena <code>precios</code> de <strong>menor a mayor</strong>.<br>
+        2. Ordena <code>nombres</code> en orden <strong>mayor a menor</strong> (Z→A).<br><br>
+        <code>precios</code> → <code>[12.5, 23.0, 45.0, 67.3, 89.9]</code><br>
+        <code>nombres</code> → <code>['Sofía', 'María', 'Carlos', 'Ana']</code>
+      </div>`,
+    starterCode: `precios = [45.0, 12.5, 89.9, 23.0, 67.3]
+nombres = ["Ana", "Carlos", "Sofía", "María"]
+
+# Ordena precios de menor a mayor
+
+
+# Ordena nombres de mayor a menor (Z→A)
+
+
+print(f"Precios: {precios}")
+print(f"Nombres: {nombres}")`,
+    testCode: `assert precios == sorted([45.0, 12.5, 89.9, 23.0, 67.3]), f"precios debe ser {sorted([45.0, 12.5, 89.9, 23.0, 67.3])}, es {precios}"
+assert nombres == sorted(["Ana", "Carlos", "Sofía", "María"], reverse=True), f"nombres debe estar de Z a A, es {nombres}"`,
+    hint: 'Usa <code>precios.sort()</code> para menor a mayor. Para mayor a menor: <code>nombres.sort(reverse=True)</code>.',
+    solution: `precios = [45.0, 12.5, 89.9, 23.0, 67.3]
+nombres = ["Ana", "Carlos", "Sofía", "María"]
+
+precios.sort()
+nombres.sort(reverse=True)
+
+print(f"Precios: {precios}")
+print(f"Nombres: {nombres}")`
+  },
+  {
+    id: 6,
+    method: 'reverse()',
+    desc: 'Invertir el orden',
+    difficulty: 'básico',
+    diffClass: 'badge-green',
+    description: `
+      <p>El método <code>reverse()</code> invierte el orden de todos los elementos de la lista <strong>in-place</strong>.</p>
+      <div class="syntax-box">lista.<span class="method">reverse</span>()</div>
+      <div class="task-label">Tu tarea</div>
+      <div class="task-box">
+        Invierte la lista de días para que quede de viernes a lunes.
+        <br><br>Resultado esperado:<br><code>["viernes", "jueves", "miércoles", "martes", "lunes"]</code>
+      </div>`,
+    starterCode: `dias = ["lunes", "martes", "miércoles", "jueves", "viernes"]
+
+# Invierte el orden de la lista
+
+
+print(dias)`,
+    testCode: `assert dias == ["viernes", "jueves", "miércoles", "martes", "lunes"], f"La lista debe estar invertida. Tienes: {dias}"
+assert len(dias) == 5, "La lista debe seguir teniendo 5 elementos"`,
+    hint: 'Simplemente llama <code>dias.reverse()</code>. No necesitas argumentos.',
+    solution: `dias = ["lunes", "martes", "miércoles", "jueves", "viernes"]
+
+dias.reverse()
+
+print(dias)`
+  },
+  {
+    id: 7,
+    method: 'index()',
+    desc: 'Buscar posición',
+    difficulty: 'intermedio',
+    diffClass: 'badge-gold',
+    description: `
+      <p>El método <code>index(x)</code> retorna el índice de la <strong>primera aparición</strong> del valor <code>x</code>. Lanza <code>ValueError</code> si no existe.</p>
+      <div class="syntax-box">posicion = lista.<span class="method">index</span>(valor)</div>
+      <div class="task-label">Tu tarea</div>
+      <div class="task-box">
+        1. Guarda en <code>pos_python</code> el índice de <code>"Python"</code>.<br>
+        2. Guarda en <code>pos_go</code> el índice de <code>"Go"</code>.<br><br>
+        <em>Recuerda: los índices empiezan en 0.</em>
+      </div>`,
+    starterCode: `lenguajes = ["Java", "Python", "JavaScript", "C++", "Go"]
+
+# Guarda el índice de "Python"
+pos_python = ___
+
+# Guarda el índice de "Go"
+pos_go = ___
+
+print(f"'Python' está en la posición: {pos_python}")
+print(f"'Go' está en la posición    : {pos_go}")`,
+    testCode: `assert pos_python == 1, f"'Python' está en el índice 1, no {pos_python}"
+assert pos_go == 4, f"'Go' está en el índice 4, no {pos_go}"`,
+    hint: 'Usa <code>lenguajes.index("Python")</code>. El resultado es el número del índice.',
+    solution: `lenguajes = ["Java", "Python", "JavaScript", "C++", "Go"]
+
+pos_python = lenguajes.index("Python")
+pos_go     = lenguajes.index("Go")
+
+print(f"'Python' está en la posición: {pos_python}")
+print(f"'Go' está en la posición    : {pos_go}")`
+  },
+  {
+    id: 8,
+    method: 'count()',
+    desc: 'Contar ocurrencias',
+    difficulty: 'intermedio',
+    diffClass: 'badge-gold',
+    description: `
+      <p>El método <code>count(x)</code> retorna cuántas veces aparece el valor <code>x</code> en la lista.</p>
+      <div class="syntax-box">cantidad = lista.<span class="method">count</span>(valor)</div>
+      <div class="task-label">Tu tarea</div>
+      <div class="task-box">
+        Cuenta los votos de cada candidato.<br><br>
+        Guarda en <code>votos_ana</code> cuántas veces aparece <code>"Ana"</code>.<br>
+        Guarda en <code>votos_luis</code> cuántas veces aparece <code>"Luis"</code>.<br><br>
+        Ana → <code>4</code> votos &nbsp;·&nbsp; Luis → <code>2</code> votos
+      </div>`,
+    starterCode: `votos = ["Ana", "Luis", "Ana", "Marta", "Ana", "Luis", "Ana"]
+
+# Cuenta los votos de Ana
+votos_ana = ___
+
+# Cuenta los votos de Luis
+votos_luis = ___
+
+print(f"Ana : {votos_ana} votos")
+print(f"Luis: {votos_luis} votos")
+
+ganador = "Ana" if votos_ana > votos_luis else "Luis"
+print(f"Ganador: {ganador}")`,
+    testCode: `assert votos_ana == 4, f"Ana tiene 4 votos, no {votos_ana}"
+assert votos_luis == 2, f"Luis tiene 2 votos, no {votos_luis}"`,
+    hint: 'Usa <code>votos.count("Ana")</code> para contar cuántas veces aparece "Ana".',
+    solution: `votos = ["Ana", "Luis", "Ana", "Marta", "Ana", "Luis", "Ana"]
+
+votos_ana  = votos.count("Ana")
+votos_luis = votos.count("Luis")
+
+print(f"Ana : {votos_ana} votos")
+print(f"Luis: {votos_luis} votos")
+
+ganador = "Ana" if votos_ana > votos_luis else "Luis"
+print(f"Ganador: {ganador}")`
+  },
+  {
+    id: 9,
+    method: 'extend() + copy()',
+    desc: 'Extender y copiar',
+    difficulty: 'intermedio',
+    diffClass: 'badge-gold',
+    description: `
+      <p><code>extend(iterable)</code> agrega todos los elementos de otro iterable al final. <code>copy()</code> crea una <strong>copia independiente</strong> (no es el mismo objeto en memoria).</p>
+      <div class="syntax-box">lista.<span class="method">extend</span>(otra_lista)<br>copia = lista.<span class="method">copy</span>()</div>
+      <div class="task-label">Tu tarea</div>
+      <div class="task-box">
+        1. Crea un <code>backup</code> de <code>lista_a</code> con <code>.copy()</code>.<br>
+        2. Extiende <code>lista_a</code> con <code>lista_b</code>.<br><br>
+        <code>lista_a</code> → <code>[1, 2, 3, 4, 5, 6]</code><br>
+        <code>backup</code> → <code>[1, 2, 3]</code> (no cambia)<br>
+        <code>lista_b</code> → <code>[4, 5, 6]</code> (no cambia)
+      </div>`,
+    starterCode: `lista_a = [1, 2, 3]
+lista_b = [4, 5, 6]
+
+# Crea una copia independiente de lista_a
+backup = ___
+
+# Extiende lista_a con lista_b
+
+
+print(f"lista_a: {lista_a}")
+print(f"backup : {backup}")
+print(f"lista_b: {lista_b}")`,
+    testCode: `assert lista_a == [1, 2, 3, 4, 5, 6], f"lista_a debe ser [1,2,3,4,5,6], es {lista_a}"
+assert backup == [1, 2, 3], f"backup debe ser [1,2,3], es {backup}"
+assert lista_b == [4, 5, 6], "lista_b no debe cambiar"
+assert lista_a is not backup, "backup debe ser independiente — usa .copy()"`,
+    hint: 'Primero: <code>backup = lista_a.copy()</code>. Luego: <code>lista_a.extend(lista_b)</code>. El orden importa.',
+    solution: `lista_a = [1, 2, 3]
+lista_b = [4, 5, 6]
+
+backup = lista_a.copy()
+lista_a.extend(lista_b)
+
+print(f"lista_a: {lista_a}")
+print(f"backup : {backup}")
+print(f"lista_b: {lista_b}")`
+  },
+  {
+    id: 10,
+    method: '🏆 Desafío final',
+    desc: 'Todos los métodos',
+    difficulty: 'desafío',
+    diffClass: 'badge-red',
+    description: `
+      <p>Pon a prueba todos los métodos aprendidos. Simula un sistema de carrito de compras.</p>
+      <div class="task-label">Tu tarea</div>
+      <div class="task-box">
+        1. Guarda en <code>total_inicial</code> cuántos items tiene el carrito (<code>len</code>).<br>
+        2. Agrega <code>"monitor"</code> al final (<code>append</code>).<br>
+        3. Inserta <code>"webcam"</code> en la posición 0 (<code>insert</code>).<br>
+        4. Elimina <code>"mouse"</code> por valor (<code>remove</code>).<br>
+        5. Vacía el carrito con (<code>clear</code>).<br><br>
+        <code>total_inicial</code> → <code>3</code><br>
+        <code>carrito</code> → <code>[]</code>
+      </div>`,
+    starterCode: `carrito = ["laptop", "mouse", "teclado"]
+
+# 1. Guarda la cantidad inicial de items
+total_inicial = ___
+
+# 2. Agrega "monitor" al final
+
+
+# 3. Inserta "webcam" al inicio (posición 0)
+
+
+# 4. Elimina "mouse"
+
+
+# 5. Vacía el carrito (el cliente canceló)
+
+
+print(f"Items originales: {total_inicial}")
+print(f"Carrito final   : {carrito}")`,
+    testCode: `assert total_inicial == 3, f"total_inicial debe ser 3, es {total_inicial}"
+assert carrito == [], f"El carrito debe estar vacío, tiene: {carrito}"`,
+    hint: 'Paso a paso: <code>len(carrito)</code> · <code>append</code> · <code>insert(0, ...)</code> · <code>remove</code> · <code>clear()</code>.',
+    solution: `carrito = ["laptop", "mouse", "teclado"]
+
+total_inicial = len(carrito)
+carrito.append("monitor")
+carrito.insert(0, "webcam")
+carrito.remove("mouse")
+carrito.clear()
+
+print(f"Items originales: {total_inicial}")
+print(f"Carrito final   : {carrito}")`
+  }
+];
+
+/* ══════════════════════════════════════════════════════
+   STATE
+══════════════════════════════════════════════════════ */
+let pyodide      = null;
+let editor       = null;
+let currentIdx   = 0;
+let completed    = new Set(JSON.parse(localStorage.getItem('lista_completed') || '[]'));
+let activeTab    = 'output';
+const STORE_KEY  = (i) => `lista_ex_${i}`;
+
+/* ══════════════════════════════════════════════════════
+   INIT
+══════════════════════════════════════════════════════ */
+async function init() {
+  // Init CodeMirror first (doesn't need Pyodide)
+  editor = CodeMirror.fromTextArea(document.getElementById('code-editor'), {
+    mode: 'python',
+    theme: 'dracula',
+    lineNumbers: true,
+    indentUnit: 4,
+    tabSize: 4,
+    indentWithTabs: false,
+    extraKeys: {
+      'Tab':       (cm) => cm.execCommand('indentMore'),
+      'Shift-Tab': (cm) => cm.execCommand('indentLess'),
+      'Ctrl-Enter': () => runCode(),
+      'Cmd-Enter':  () => runCode()
+    }
+  });
+
+  buildSidebar();
+  goExercise(0, false);
+
+  // Load Pyodide
+  try {
+    pyodide = await loadPyodide({
+      indexURL: 'https://cdn.jsdelivr.net/pyodide/v0.26.2/full/'
+    });
+    document.getElementById('loading-overlay').classList.add('hidden');
+    document.getElementById('run-btn').disabled = false;
+  } catch(e) {
+    document.getElementById('loading-overlay').innerHTML = `
+      <p style="color:var(--red)">⚠️ No se pudo cargar Python</p>
+      <small>Verifica tu conexión a internet e intenta recargar la página.</small>`;
+  }
+}
+
+/* ══════════════════════════════════════════════════════
+   SIDEBAR
+══════════════════════════════════════════════════════ */
+function buildSidebar() {
+  const list = document.getElementById('exercise-list');
+  list.innerHTML = EXERCISES.map((ex, i) => {
+    const done = completed.has(ex.id);
+    return `<div class="ex-item${done ? ' done' : ''}" id="sidebar-item-${i}" onclick="goExercise(${i})">
+      <span class="ex-icon">${done ? '✅' : '○'}</span>
+      <span class="ex-label">
+        <span class="method-name">${ex.method}</span>
+        <span class="method-desc">${ex.desc}</span>
+      </span>
+    </div>`;
+  }).join('');
+  updateProgress();
+}
+
+function updateProgress() {
+  const done = completed.size;
+  const total = EXERCISES.length;
+  document.getElementById('progress-text').textContent = `${done} / ${total} completados`;
+  document.getElementById('progress-fill').style.width = `${(done / total) * 100}%`;
+
+  if (done === total) {
+    document.getElementById('completion-banner').style.display = 'block';
+  }
+}
+
+/* ══════════════════════════════════════════════════════
+   EXERCISE NAVIGATION
+══════════════════════════════════════════════════════ */
+function goExercise(idx, saveCurrentCode = true) {
+  if (idx < 0 || idx >= EXERCISES.length) return;
+
+  // Save current code before switching
+  if (saveCurrentCode && editor) {
+    localStorage.setItem(STORE_KEY(EXERCISES[currentIdx].id), editor.getValue());
+  }
+
+  currentIdx = idx;
+  const ex = EXERCISES[idx];
+
+  // Update sidebar highlight
+  document.querySelectorAll('.ex-item').forEach((el, i) => {
+    el.classList.toggle('active', i === idx);
+  });
+
+  // Load code (saved or starter)
+  const savedCode = localStorage.getItem(STORE_KEY(ex.id));
+  if (editor) editor.setValue(savedCode || ex.starterCode);
+
+  // Render description
+  renderDescription(ex);
+
+  // Clear output
+  clearOutput();
+
+  // Update nav
+  document.getElementById('prev-btn').disabled = idx === 0;
+  document.getElementById('next-btn').disabled = idx === EXERCISES.length - 1;
+  document.getElementById('ex-counter').textContent = `Ejercicio ${idx + 1} de ${EXERCISES.length}`;
+}
+
+function renderDescription(ex) {
+  document.getElementById('desc-pane').innerHTML = `
+    <div class="ex-header">
+      <h2>${ex.method}</h2>
+      <span class="badge ${ex.diffClass}">${ex.difficulty}</span>
+    </div>
+    ${ex.description}
+    <div>
+      <button class="hint-toggle" onclick="toggleHint(this)">💡 Ver pista</button>
+      <div class="hint-box" id="hint-box">${ex.hint}</div>
+    </div>
+    <div>
+      <button class="sol-toggle" onclick="toggleSolution(this)">👁 Ver solución</button>
+      <div class="sol-box" id="sol-box"><pre>${escapeHtml(ex.solution)}</pre></div>
+    </div>`;
+}
+
+function toggleHint(btn) {
+  const box = document.getElementById('hint-box');
+  box.classList.toggle('visible');
+  btn.textContent = box.classList.contains('visible') ? '💡 Ocultar pista' : '💡 Ver pista';
+}
+function toggleSolution(btn) {
+  const box = document.getElementById('sol-box');
+  box.classList.toggle('visible');
+  btn.textContent = box.classList.contains('visible') ? '👁 Ocultar solución' : '👁 Ver solución';
+}
+
+/* ══════════════════════════════════════════════════════
+   CODE EXECUTION
+══════════════════════════════════════════════════════ */
+async function runCode() {
+  if (!pyodide) return;
+
+  const btn = document.getElementById('run-btn');
+  btn.disabled = true;
+  btn.textContent = '⏳ Ejecutando…';
+
+  setTestResult('running', '⏳ Ejecutando código…');
+  switchTab('output', document.querySelector('.tab-btn'));
+
+  const code = editor.getValue();
+  const ex   = EXERCISES[currentIdx];
+
+  // Pass code to Python safely (no escaping issues)
+  pyodide.globals.set('_student_code', code);
+  pyodide.globals.set('_test_code', ex.testCode);
+
+  let output = '', passed = false, message = '';
+
+  try {
+    const result = await pyodide.runPythonAsync(`
+import sys, io
+
+_ns = {'__builtins__': __builtins__}
+_out = io.StringIO()
+_old = sys.stdout
+sys.stdout = _out
+
+_output  = ''
+_passed  = False
+_message = ''
+
+try:
+    exec(_student_code, _ns)
+    _output = _out.getvalue()
+    sys.stdout = _old
+    try:
+        exec(_test_code, _ns)
+        _passed  = True
+        _message = '✅ ¡Todos los tests pasaron!'
+    except AssertionError as e:
+        _message = str(e) if str(e) else 'Resultado incorrecto — revisa la lógica'
+    except Exception as e:
+        _message = f'Error en test: {type(e).__name__}: {e}'
+except Exception as e:
+    sys.stdout = _old
+    _output = _out.getvalue()
+    _message = f'{type(e).__name__}: {e}'
+
+(_output, _passed, _message)
+`);
+
+    const arr = result.toJs();
+    output  = arr[0];
+    passed  = arr[1];
+    message = arr[2];
+  } catch(e) {
+    output  = '';
+    passed  = false;
+    message = `Error interno: ${e.message}`;
+  }
+
+  // Show output
+  const outEl = document.getElementById('tab-output');
+  if (output.trim()) {
+    outEl.innerHTML = `<pre>${escapeHtml(output)}</pre>`;
+  } else {
+    outEl.innerHTML = `<span class="output-placeholder">El código no imprimió nada.</span>`;
+  }
+
+  // Show test result
+  if (passed) {
+    setTestResult('pass', `✅ ${message}`);
+    markCompleted(EXERCISES[currentIdx].id);
+  } else {
+    setTestResult('fail', `❌ ${message}`);
+  }
+
+  btn.disabled = false;
+  btn.textContent = '▶ Ejecutar';
+
+  // Auto-switch to tests tab
+  const testBtn = document.querySelectorAll('.tab-btn')[1];
+  switchTab('tests', testBtn);
+}
+
+function markCompleted(id) {
+  completed.add(id);
+  localStorage.setItem('lista_completed', JSON.stringify([...completed]));
+
+  // Update sidebar item
+  const idx = EXERCISES.findIndex(e => e.id === id);
+  const item = document.getElementById(`sidebar-item-${idx}`);
+  if (item) {
+    item.classList.add('done');
+    item.querySelector('.ex-icon').textContent = '✅';
+  }
+  updateProgress();
+}
+
+/* ══════════════════════════════════════════════════════
+   UI HELPERS
+══════════════════════════════════════════════════════ */
+function resetCode() {
+  const ex = EXERCISES[currentIdx];
+  editor.setValue(ex.starterCode);
+  localStorage.removeItem(STORE_KEY(ex.id));
+  clearOutput();
+}
+
+function clearOutput() {
+  document.getElementById('tab-output').innerHTML =
+    '<span class="output-placeholder">Ejecuta el código para ver la salida…</span>';
+  document.getElementById('tab-tests').innerHTML =
+    '<span class="output-placeholder">Ejecuta el código para ver los resultados…</span>';
+}
+
+function setTestResult(type, msg) {
+  const icons = { pass: '✅', fail: '❌', running: '⏳' };
+  document.getElementById('tab-tests').innerHTML =
+    `<div class="test-result ${type}">
+       <span class="test-icon">${icons[type]}</span>
+       <span class="test-msg">${msg}</span>
+     </div>`;
+}
+
+function switchTab(tab, btn) {
+  activeTab = tab;
+  document.getElementById('tab-output').style.display = tab === 'output' ? 'block' : 'none';
+  document.getElementById('tab-tests').style.display  = tab === 'tests'  ? 'block' : 'none';
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+}
+
+function escapeHtml(str) {
+  return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+window.addEventListener('load', init);
+</script>
+</body>
+</html>
